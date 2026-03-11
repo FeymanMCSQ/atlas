@@ -1,0 +1,9 @@
+{
+  "name": "@atlas/prompts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI prompt templates",
+  "main": "src/index.ts",
+  "scripts": {},
+  "dependencies": {}
+}

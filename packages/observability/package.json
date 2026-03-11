@@ -1,0 +1,9 @@
+{
+  "name": "@atlas/observability",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Structured logging and metrics",
+  "main": "src/index.ts",
+  "scripts": {},
+  "dependencies": {}
+}

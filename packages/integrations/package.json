@@ -1,0 +1,9 @@
+{
+  "name": "@atlas/integrations",
+  "version": "0.1.0",
+  "private": true,
+  "description": "External API adapters",
+  "main": "src/index.ts",
+  "scripts": {},
+  "dependencies": {}
+}

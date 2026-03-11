@@ -1,0 +1,9 @@
+{
+  "name": "@atlas/queue",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Job queue abstraction",
+  "main": "src/index.ts",
+  "scripts": {},
+  "dependencies": {}
+}

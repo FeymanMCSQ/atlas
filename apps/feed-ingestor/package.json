@@ -1,0 +1,8 @@
+{
+  "name": "@atlas/feed-ingestor",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Fetches and normalizes external signals from content feeds",
+  "scripts": {},
+  "dependencies": {}
+}

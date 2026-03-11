@@ -1,0 +1,8 @@
+{
+  "name": "@atlas/transcriber",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Converts audio recordings into transcript content",
+  "scripts": {},
+  "dependencies": {}
+}

@@ -1,0 +1,33 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  apps/content-brain: {}
+
+  apps/feed-ingestor: {}
+
+  apps/orchestrator: {}
+
+  apps/publisher: {}
+
+  apps/transcriber: {}
+
+  packages/config: {}
+
+  packages/db: {}
+
+  packages/domain: {}
+
+  packages/integrations: {}
+
+  packages/observability: {}
+
+  packages/prompts: {}
+
+  packages/queue: {}

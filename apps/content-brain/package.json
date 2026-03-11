@@ -1,0 +1,8 @@
+{
+  "name": "@atlas/content-brain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Transforms signals into narrative content drafts using AI",
+  "scripts": {},
+  "dependencies": {}
+}

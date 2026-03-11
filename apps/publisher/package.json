@@ -1,0 +1,8 @@
+{
+  "name": "@atlas/publisher",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Publishes approved content to X and LinkedIn",
+  "scripts": {},
+  "dependencies": {}
+}

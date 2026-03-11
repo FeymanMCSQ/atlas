@@ -1,0 +1,8 @@
+{
+  "name": "@atlas/orchestrator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Coordinates system workflows and job sequencing",
+  "scripts": {},
+  "dependencies": {}
+}

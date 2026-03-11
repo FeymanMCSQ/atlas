@@ -1,0 +1,9 @@
+{
+  "name": "@atlas/db",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Database client and repositories",
+  "main": "src/index.ts",
+  "scripts": {},
+  "dependencies": {}
+}
