@@ -8,12 +8,14 @@
     "packages/*"
   ],
   "scripts": {
-    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules"
+    "clean": "rm -rf node_modules apps/*/node_modules apps/*/dist packages/*/node_modules packages/*/dist",
+    "clean:dev": "pgrep -f 'tsx.*src/index.ts' | xargs -r kill -9 || echo 'No orphaned workers found'"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
+    "@types/node": "^25.4.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }

@@ -5,5 +5,8 @@
   "description": "Job queue abstraction",
   "main": "src/index.ts",
   "scripts": {},
-  "dependencies": {}
+  "dependencies": {
+    "@atlas/domain": "workspace:*",
+    "bullmq": "^5.70.4"
+  }
 }

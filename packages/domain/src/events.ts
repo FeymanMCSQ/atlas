@@ -17,6 +17,9 @@ export const EventTypes = {
   /** Emitted by Transcriber when audio has been converted to text */
   CONTENT_TRANSCRIBED: "content.transcribed",
 
+  /** Emitted by Orchestrator to trigger Content Brain to score and draft content */
+  CONTENT_DRAFT_REQUESTED: "content.draft_requested",
+
   /** Emitted by Content Brain when relevance and topic analysis completes */
   CONTENT_SCORED: "content.scored",
 
@@ -53,6 +56,10 @@ export interface ContentTranscribedPayload {
   contentItemId: string;
   transcriptId: string;
   timestamp: string;
+}
+
+export interface ContentDraftRequestedPayload {
+  contentItemId: string;
 }
 
 export interface ContentScoredPayload {
@@ -103,6 +110,7 @@ export interface ContentPublishFailedPayload {
 export interface EventPayloadMap {
   [EventTypes.CONTENT_INGESTED]: ContentIngestedPayload;
   [EventTypes.CONTENT_TRANSCRIBED]: ContentTranscribedPayload;
+  [EventTypes.CONTENT_DRAFT_REQUESTED]: ContentDraftRequestedPayload;
   [EventTypes.CONTENT_SCORED]: ContentScoredPayload;
   [EventTypes.CONTENT_DRAFTED]: ContentDraftedPayload;
   [EventTypes.CONTENT_REVIEW_REQUESTED]: ContentReviewRequestedPayload;

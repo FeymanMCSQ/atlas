@@ -10,6 +10,7 @@ export {
   type EventType,
   type ContentIngestedPayload,
   type ContentTranscribedPayload,
+  type ContentDraftRequestedPayload,
   type ContentScoredPayload,
   type ContentDraftedPayload,
   type ContentReviewRequestedPayload,
