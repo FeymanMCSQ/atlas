@@ -19,6 +19,7 @@ export const Prompts = {
   FRAME_INSIGHT: `
     Take these extracted signals and frame them into ONE clear, unique insight.
     The insight should be non-obvious and valuable to a software engineering audience.
+    Identify the underlying tension, paradox, or friction that makes this insight interesting.
     
     Signals:
     {{signals}}
@@ -27,8 +28,15 @@ export const Prompts = {
   // Stage 3: Hook generation
   GENERATE_HOOKS: `
     Write 3 distinct hooks for a social media post based on this insight.
-    Rule 1: Every hook must create curiosity, tension, or contrast.
-    Rule 2: Do not use generic filler language ("In today's fast paced world...").
+    
+    CRITICAL RULES (Atlas Marketing Philosophy):
+    1. Maximum length: 12 words. (Preferred: 5-10 words).
+    2. Must create an open loop. Do NOT explain or resolve the insight in the hook. 
+    3. Introduce tension, contrast, or suspense.
+    4. NO generic filler ("In today's fast-paced world", "As we all know", "technology is evolving").
+    5. Tone: A calm, analytical builder. No hype, no clickbait.
+    
+    Use these archetypes for inspiration: Expectation Flip, Hidden Problem, Curiosity Gap, Contradiction, Suspense, Misdirection.
     
     Insight:
     {{insight}}
@@ -38,7 +46,11 @@ export const Prompts = {
   GENERATE_DRAFT: `
     Write a short, punchy social media post using this hook and insight.
     Follow this exact structure: hook → tension → insight → takeaway.
-    Prefer short, clear sentences. Express one clear idea.
+    
+    RULES:
+    1. Tone: A thoughtful builder explaining an insight. Calm, analytical, high information density.
+    2. Form: Short, clear, direct sentences. Avoid overexplaining.
+    3. Focus: Express exactly ONE idea.
     
     Hook: {{hook}}
     Insight: {{insight}}
@@ -46,12 +58,11 @@ export const Prompts = {
 
   // Stage 5: Quality critique
   EVALUATE_DRAFT: `
-    Critique this draft against the Atlas Writing Guidelines:
-    1. Does it start with a strong hook?
-    2. Does it express exactly one clear idea?
-    3. Is it free of generic corporate filler language?
-    4. Are the sentences short and clear?
-    5. Does it follow the structure: hook → tension → insight → takeaway?
+    Critique this draft against the Atlas Marketing Philosophy:
+    1. Hook length: Is the first line 12 words or less?
+    2. Open loop: Does the hook provoke curiosity WITHOUT explaining the answer?
+    3. Structure: Does it follow hook → tension → insight → takeaway?
+    4. Tone: Is it calm and analytical without hype, filler, or corporate jargon?
     
     Score the draft from 1-10 and list specific flaws.
     Draft:
@@ -61,7 +72,7 @@ export const Prompts = {
   // Stage 6: Rewrite if necessary
   REWRITE_DRAFT: `
     Rewrite this draft to fix the following flaws identified in critique.
-    Maintain the core insight but improve the execution.
+    Maintain the core insight and tone, but execute flawlessly against the Atlas rules.
     
     Draft:
     {{draft}}
