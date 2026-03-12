@@ -5,5 +5,11 @@
   "description": "Database client and repositories",
   "main": "src/index.ts",
   "scripts": {},
-  "dependencies": {}
+  "dependencies": {
+    "@prisma/client": "^7.5.0",
+    "@prisma/extension-accelerate": "^3.0.1"
+  },
+  "devDependencies": {
+    "prisma": "^7.5.0"
+  }
 }
