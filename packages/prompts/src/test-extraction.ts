@@ -31,7 +31,7 @@ async function runTest() {
     ? createOpenAI({ baseURL: 'https://openrouter.ai/api/v1', apiKey: openrouterKey })
     : openai;
     
-  const modelName = openrouterKey ? 'google/gemini-2.5-flash' : 'gpt-4o-mini';
+  const modelName = openrouterKey ? 'google/gemini-3-flash-preview' : 'gpt-4o-mini';
 
   const rawContent = `
     Apple is reportedly working on a foldable iPhone, potentially releasing it as early as 2026. 
