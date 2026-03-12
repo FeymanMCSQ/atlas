@@ -44,13 +44,15 @@ export const Prompts = {
 
   // Stage 4: Draft generation
   GENERATE_DRAFT: `
-    Write a short, punchy social media post using this hook and insight.
+    Write two versions of a social media post using this hook and insight: one for X (Twitter) and one for LinkedIn.
     Follow this exact structure: hook → tension → insight → takeaway.
     
     RULES:
     1. Tone: A thoughtful builder explaining an insight. Calm, analytical, high information density.
     2. Form: Short, clear, direct sentences. Avoid overexplaining.
     3. Focus: Express exactly ONE idea.
+    4. X (Twitter): Extremely punchy.
+    5. LinkedIn: Slightly more room for formatting and spacing, but strictly NO corporate filler. Keep it sharp.
     
     Hook: {{hook}}
     Insight: {{insight}}
