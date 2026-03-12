@@ -1,0 +1,1 @@
+[dotenv@17.3.1] injecting env (2) from ../../.env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com

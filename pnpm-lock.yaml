@@ -73,6 +73,10 @@ importers:
   packages/observability: {}
 
   packages/prompts:
+    dependencies:
+      '@atlas/db':
+        specifier: workspace:*
+        version: link:../db
     devDependencies:
       '@ai-sdk/openai':
         specifier: ^3.0.41

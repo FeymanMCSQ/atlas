@@ -2,6 +2,7 @@ import { z } from "zod";
 import { generateObject } from "ai";
 import { openai, createOpenAI } from "@ai-sdk/openai";
 import { Prompts } from "./index";
+import { db } from "@atlas/db";
 import * as dotenv from "dotenv";
 import { resolve } from "path";
 
@@ -39,15 +40,29 @@ async function runTest() {
     If they can't solve the crease issue, they might cancel the project entirely.
   `;
 
+  const renderedPrompt = Prompts.EXTRACT_SIGNALS.replace("{{content}}", rawContent);
+
   try {
     const { object } = await generateObject({
       model: provider(modelName),
       schema: SignalExtractionSchema,
-      prompt: Prompts.EXTRACT_SIGNALS.replace("{{content}}", rawContent),
+      prompt: renderedPrompt,
     });
 
     console.log("\n✅ Structured Insight JSON:");
     console.log(JSON.stringify(object, null, 2));
+
+    // Store the prompt run record in the database
+    const promptRun = await db.promptRun.create({
+      data: {
+        promptName: "EXTRACT_SIGNALS",
+        model: modelName,
+        input: { prompt: renderedPrompt, rawContent },
+        output: object as any,
+      }
+    });
+
+    console.log(`\n✅ Saved PromptRun to database (${promptRun.id})`);
   } catch (error) {
     console.error("❌ Failed to extract signals:", error);
     process.exit(1);

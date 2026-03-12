@@ -15,5 +15,8 @@
     "ai": "^6.0.116",
     "typescript": "^5.7.3",
     "zod": "^4.3.6"
+  },
+  "dependencies": {
+    "@atlas/db": "workspace:*"
   }
 }
