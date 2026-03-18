@@ -5,5 +5,7 @@
   "description": "External API adapters",
   "main": "src/index.ts",
   "scripts": {},
-  "dependencies": {}
+  "dependencies": {
+    "twitter-api-v2": "^1.29.0"
+  }
 }
