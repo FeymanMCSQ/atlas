@@ -51,7 +51,7 @@ model Draft {
   contentItemId  String
   platform       String   // "x" | "linkedin"
   body           String
-  status         String   @default("pending") // "pending" | "approved" | "published" | "failed"
+  status         String   @default("pending") // "pending" | "approved" | "publishing" | "published" | "failed"
   qualityScore   Float?
   externalPostId String?  // Set after successful publish
 

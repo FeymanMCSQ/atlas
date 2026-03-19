@@ -32,20 +32,23 @@ export async function handlePublishRequested(
 ): Promise<void> {
   const { draftId, platform } = payload;
 
-  // ─── 1. Fetch the draft ─────────────────────────────────────────────
+  // ─── 1. Atomic claim (Duplicate Protection) ─────────────────────────
+  const claimResult = await db.draft.updateMany({
+    where: { 
+      id: draftId,
+      status: { in: ['approved', 'failed'] }
+    },
+    data: { status: 'publishing' }
+  });
+
+  if (claimResult.count === 0) {
+    console.log(`[Publisher] Draft ${draftId} cannot be published (invalid state or already locked).`);
+    return;
+  }
+
+  // Fetch the latest draft details now that we have claimed it
   const draft = await db.draft.findUnique({ where: { id: draftId } });
-
-  if (!draft) {
-    // Non-retriable — draft missing won't appear on retry either
-    console.error(`[Publisher] Draft not found: ${draftId}`);
-    return;
-  }
-
-  // ─── Idempotency guard ───────────────────────────────────────────────
-  if (draft.status === 'published') {
-    console.log(`[Publisher] Draft ${draftId} already published — skipping.`);
-    return;
-  }
+  if (!draft) return; // Should never happen unless deleted concurrently
 
   // ─── 2. Format payload ────────────────────────────────────────────────
   const domainDraft = {
@@ -61,19 +64,28 @@ export async function handlePublishRequested(
   );
 
   // ─── 3. Post to platform ──────────────────────────────────────────────
-  // Errors here are NOT caught — BullMQ will retry the job automatically.
+  // Catch errors to revert status, then re-throw for BullMQ retry logic.
   let externalPostId: string;
 
-  if (platform === 'x' && formatted.platform === 'x') {
-    const result = await sendTweet(formatted.text);
-    externalPostId = result.id;
+  try {
+    if (platform === 'x' && formatted.platform === 'x') {
+      const result = await sendTweet(formatted.text);
+      externalPostId = result.id;
 
-  } else if (platform === 'linkedin' && formatted.platform === 'linkedin') {
-    const result = await postToLinkedIn(formatted.commentary);
-    externalPostId = result.id;
+    } else if (platform === 'linkedin' && formatted.platform === 'linkedin') {
+      const result = await postToLinkedIn(formatted.commentary);
+      externalPostId = result.id;
 
-  } else {
-    throw new Error(`Unsupported platform: ${platform}`);
+    } else {
+      throw new Error(`Unsupported platform: ${platform}`);
+    }
+  } catch (err: any) {
+    // Revert status to 'failed' so BullMQ retries can pick it up again
+    await db.draft.update({
+      where: { id: draftId },
+      data: { status: 'failed' }
+    });
+    throw err;
   }
 
   // ─── 4. Update Draft status ───────────────────────────────────────────

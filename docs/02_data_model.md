@@ -56,7 +56,9 @@ generated
 review_requested
 approved
 rejected
+publishing
 published
+failed
 
 
 ---
