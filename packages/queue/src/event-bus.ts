@@ -8,7 +8,7 @@
  * Uses the EventPayloadMap from @atlas/domain for type safety.
  */
 
-import { Queue, Worker, type Job } from "bullmq";
+import { Queue, Worker, type Job, type JobsOptions } from "bullmq";
 import { type EventType, type EventPayloadMap, type AtlasEvent } from "@atlas/domain";
 import { getRedisConnection } from "./connection.js";
 
@@ -36,11 +36,13 @@ export function getEventQueue(): Queue {
  *
  * @param eventType - One of the EventTypes constants (e.g. "content.ingested")
  * @param payload - The strongly-typed payload for this event type
+ * @param jobOptions - Optional BullMQ job options (e.g. attempts, backoff)
  * @returns The created job
  */
 export async function emitEvent<T extends EventType>(
   eventType: T,
-  payload: T extends keyof EventPayloadMap ? EventPayloadMap[T] : never
+  payload: T extends keyof EventPayloadMap ? EventPayloadMap[T] : never,
+  jobOptions?: JobsOptions
 ): Promise<Job> {
   const queue = getEventQueue();
 
@@ -54,6 +56,7 @@ export async function emitEvent<T extends EventType>(
   const job = await queue.add(eventType, event, {
     removeOnComplete: 100,
     removeOnFail: 200,
+    ...jobOptions,
   });
 
   return job;
