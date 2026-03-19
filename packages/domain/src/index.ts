@@ -21,3 +21,9 @@ export {
   type EventPayloadMap,
   type AtlasEvent,
 } from "./events.js";
+
+export {
+  Platform,
+  DraftStatus,
+  type Draft,
+} from "./types.js";

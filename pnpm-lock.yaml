@@ -47,7 +47,20 @@ importers:
         specifier: workspace:*
         version: link:../../packages/queue
 
-  apps/publisher: {}
+  apps/publisher:
+    dependencies:
+      '@atlas/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@atlas/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@atlas/integrations':
+        specifier: workspace:*
+        version: link:../../packages/integrations
+      '@atlas/queue':
+        specifier: workspace:*
+        version: link:../../packages/queue
 
   apps/transcriber: {}
 

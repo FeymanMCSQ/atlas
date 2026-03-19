@@ -45,3 +45,16 @@ model PromptRun {
 
   createdAt    DateTime   @default(now())
 }
+
+model Draft {
+  id             String   @id @default(uuid())
+  contentItemId  String
+  platform       String   // "x" | "linkedin"
+  body           String
+  status         String   @default("pending") // "pending" | "approved" | "published" | "failed"
+  qualityScore   Float?
+  externalPostId String?  // Set after successful publish
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

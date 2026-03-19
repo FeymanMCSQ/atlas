@@ -1,1 +1,1 @@
-[dotenv@17.3.1] injecting env (2) from ../../.env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+-- PromptRun table migration (empty - schema defined in 0_init or later)

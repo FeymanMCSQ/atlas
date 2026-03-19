@@ -4,5 +4,10 @@
   "private": true,
   "description": "Publishes approved content to X and LinkedIn",
   "scripts": {},
-  "dependencies": {}
+  "dependencies": {
+    "@atlas/domain": "workspace:*",
+    "@atlas/queue": "workspace:*",
+    "@atlas/db": "workspace:*",
+    "@atlas/integrations": "workspace:*"
+  }
 }
