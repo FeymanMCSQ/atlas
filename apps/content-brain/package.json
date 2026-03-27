@@ -3,6 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "description": "Transforms signals into narrative content drafts using AI",
-  "scripts": {},
-  "dependencies": {}
+  "scripts": {
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.41",
+    "ai": "^6.0.116",
+    "zod": "^4.3.6",
+    "@atlas/db": "workspace:*",
+    "@atlas/domain": "workspace:*",
+    "@atlas/queue": "workspace:*",
+    "@atlas/prompts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^25.4.0"
+  }
 }

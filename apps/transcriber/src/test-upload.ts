@@ -5,11 +5,7 @@ async function runTest() {
   console.log('\n=== Transcriber Upload Test ===\n');
 
   // 1. Fetch a real dummy audio file (Deepgram rejects invalid binary headers)
-  const dummyFilePath = path.resolve(__dirname, 'dummy-audio.mp3');
-  console.log('📥 Downloading real dummy audio file...');
-  const fileRes = await fetch('https://www.w3schools.com/html/horse.mp3');
-  const arrayBuffer = await fileRes.arrayBuffer();
-  fs.writeFileSync(dummyFilePath, Buffer.from(arrayBuffer));
+  const dummyFilePath = path.resolve(__dirname, '../speech.ogg');
 
   try {
     // 2. Build form data manually since we are in node (can use Blob)
@@ -17,8 +13,8 @@ async function runTest() {
     
     // We can use standard node fetch with FormData if Node >= 18
     const formData = new FormData();
-    const blob = new Blob([fileContent], { type: 'audio/mpeg' });
-    formData.append('audio', blob, 'dummy-audio.mp3');
+    const blob = new Blob([fileContent], { type: 'audio/ogg' });
+    formData.append('audio', blob, 'speech.ogg');
 
     // 3. Send to local server
     console.log('📤 Uploading dummy audio to Transcriber...');
@@ -42,10 +38,7 @@ async function runTest() {
     console.error('❌ FAIL: Request error:', error);
     process.exit(1);
   } finally {
-    // Clean up
-    if (fs.existsSync(dummyFilePath)) {
-      fs.unlinkSync(dummyFilePath);
-    }
+    // Clean up completely omitted since speech.ogg is static and reliable
     console.log('\nTest complete.');
   }
 }

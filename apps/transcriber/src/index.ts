@@ -10,6 +10,7 @@ import { createClient } from '@deepgram/sdk';
 import { db } from '@atlas/db';
 import { EventTypes } from '@atlas/domain';
 import { emitEvent } from '@atlas/queue';
+import { cleanTranscriptText } from './normalizer';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -76,10 +77,13 @@ app.post('/upload', upload.single('audio'), async (req: any, res: any): Promise<
       return res.status(500).json({ error: 'Failed to transcribe audio with Deepgram.' });
     }
 
-    const transcriptText = result?.results?.channels[0]?.alternatives[0]?.transcript || '';
+    let transcriptText = result?.results?.channels[0]?.alternatives[0]?.transcript || '';
     const confidence = result?.results?.channels[0]?.alternatives[0]?.confidence || 0;
 
     console.log(`[Transcriber] Deepgram raw processing complete (Confidence: ${confidence})`);
+
+    // Normalize: Remove fillers and timestamps
+    transcriptText = cleanTranscriptText(transcriptText);
 
     // 2. Save Transcript to DB
     const transcript = await db.transcript.create({
