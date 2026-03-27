@@ -15,12 +15,13 @@ export default function AtlasDashboard() {
   
   const [draftsMap, setDraftsMap] = useState<Record<string, Draft[]>>({});
   const [processing, setProcessing] = useState<Record<string, boolean>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
   
   // Track intervals per signal to avoid overlap in active polls
   const pollIntervals = useRef<Record<string, NodeJS.Timeout>>({});
 
   useEffect(() => {
-    // Phase 1: Ribbon Hydration
     fetch('/api/feeds')
       .then(res => res.json())
       .then(data => {
@@ -30,7 +31,21 @@ export default function AtlasDashboard() {
           setSelectedFeeds(new Set(data.feeds.map((f: Feed) => f.id)));
         }
       });
+
+    // Theme initialization
+    const savedTheme = localStorage.getItem('atlas-theme') as 'light' | 'dark';
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
   }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(nextTheme);
+    document.documentElement.setAttribute('data-theme', nextTheme);
+    localStorage.setItem('atlas-theme', nextTheme);
+  };
 
   useEffect(() => {
     // Phase 2: Signal Grid Hydration (Filtered)
@@ -112,11 +127,24 @@ export default function AtlasDashboard() {
     // In actual prod, we'd update `status: 'published'` visual indicator here.
   };
 
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   return (
     <main className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Atlas Neural Control</h1>
-        <p className={styles.subtitle}>Autonomous B2B SaaS Content Generation Engine</p>
+        <div className={styles.headerTop}>
+          <div className={styles.logoGroup}>
+            <h1 className={styles.title}>Atlas Neural Control</h1>
+            <p className={styles.subtitle}>Autonomous B2B SaaS Content Generation Engine</p>
+          </div>
+          <button className={styles.themeToggle} onClick={toggleTheme} aria-label="Toggle Theme">
+            {theme === 'light' ? '● Dark Mode' : '○ Light Mode'}
+          </button>
+        </div>
       </header>
 
       {/* Top Section: RSS Menu */}
@@ -173,14 +201,20 @@ export default function AtlasDashboard() {
                      <div key={d.id} className={styles.draftBox}>
                        <span className={styles.draftPlatform}>{d.platform}</span>
                        <p className={styles.draftBody}>{d.body}</p>
-                       <div className={styles.publishActions}>
-                         <button 
-                           className={`${styles.btnPublish} ${d.platform === 'x' ? styles.btnPublishX : styles.btnPublishLn}`}
-                           onClick={() => triggerPublish(d.id, d.platform, signal.id)}
-                         >
-                           Post to {d.platform === 'x' ? 'X' : 'LinkedIn'}
-                         </button>
-                       </div>
+                        <div className={styles.publishActions}>
+                          <button 
+                            className={`${styles.btnPublish} ${d.platform === 'x' ? styles.btnPublishX : styles.btnPublishLn}`}
+                            onClick={() => triggerPublish(d.id, d.platform, signal.id)}
+                          >
+                            Post to {d.platform === 'x' ? 'X' : 'LinkedIn'}
+                          </button>
+                          <button 
+                            className={styles.btnCopy} 
+                            onClick={() => copyToClipboard(d.body, d.id)}
+                          >
+                            {copiedId === d.id ? '✓ Copied!' : 'Copy Post'}
+                          </button>
+                        </div>
                      </div>
                    ))}
                    <div className={styles.publishActions} style={{borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '10px', marginTop: '10px'}}>

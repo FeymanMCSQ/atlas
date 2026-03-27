@@ -6,79 +6,103 @@
 }
 
 @keyframes fadeIn {
-  0% { opacity: 0; transform: translateY(10px); }
+  0% { opacity: 0; transform: translateY(5px); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
 .header {
-  margin-bottom: 3rem;
-  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.headerTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.logoGroup {
+  text-align: left;
+}
+
+.themeToggle {
+  background: transparent;
+  border: 1px solid var(--text-primary);
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: all 0.2s ease;
+}
+
+.themeToggle:hover {
+  background: var(--text-primary);
+  color: var(--bg-color);
 }
 
 .title {
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-weight: 800;
   letter-spacing: -0.05em;
-  background: linear-gradient(135deg, #ffffff, #a1a1aa);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-primary);
   margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
 }
 
 .subtitle {
   color: var(--text-secondary);
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin: 0;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 /* Ribbon */
 .ribbon {
   display: flex;
-  gap: 1rem;
-  justify-content: center;
+  gap: 0.75rem;
+  justify-content: flex-start;
   flex-wrap: wrap;
-  margin-bottom: 3rem;
-  padding-bottom: 1rem;
+  margin-bottom: 4rem;
+  padding-bottom: 2rem;
   border-bottom: 1px solid var(--glass-border);
 }
 
 .chip {
-  background: var(--glass-bg);
+  background: transparent;
   border: 1px solid var(--glass-border);
-  border-radius: 9999px;
-  padding: 0.6rem 1.5rem;
-  font-size: 0.95rem;
+  border-radius: 0; /* Minimalist square edges */
+  padding: 0.5rem 1.2rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   color: var(--text-secondary);
   font-weight: 500;
-  user-select: none;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .chip:hover {
-  border-color: var(--glass-border-hover);
+  border-color: var(--text-primary);
   color: var(--text-primary);
-  transform: translateY(-2px);
 }
 
 .chipActive {
-  background: rgba(99, 102, 241, 0.15);
-  border-color: var(--accent-color);
-  color: #ffffff;
-  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--bg-color);
 }
 
+
 .chipAction {
-  background: transparent;
-  border-color: var(--text-secondary);
-  border-style: dashed;
-  color: var(--text-primary);
-  opacity: 0.8;
+  border-style: solid;
+  opacity: 0.6;
 }
 
 .chipAction:hover {
-  background: var(--surface-hover);
-  border-style: solid;
   opacity: 1;
 }
 
@@ -90,23 +114,18 @@
 }
 
 .card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: transparent;
   border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  padding: 2rem;
+  border-radius: 0; /* Minimalist square edges */
+  padding: 2.5rem;
   display: flex;
   flex-direction: column;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s ease;
   gap: 1.5rem;
 }
 
 .card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-  border-color: var(--glass-border-hover);
+  border-color: #ffffff;
 }
 
 .cardHeader {
@@ -117,41 +136,37 @@
 }
 
 .cardTitle {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.5rem;
+  font-weight: 700;
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.2;
   color: var(--text-primary);
+  text-transform: uppercase;
 }
 
 .cardSource {
-  background: var(--surface-hover);
-  padding: 0.25rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
+  border: 1px solid var(--glass-border);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--accent-hover);
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
   white-space: nowrap;
 }
 
 .cardSummary {
   color: var(--text-secondary);
-  font-size: 0.95rem;
+  font-size: 1rem;
   line-height: 1.6;
   flex-grow: 1;
   margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 /* Interactions */
 .cardActions {
   display: flex;
   justify-content: flex-end;
-  padding-top: 1rem;
+  padding-top: 1.5rem;
   border-top: 1px solid var(--glass-border);
 }
 
@@ -159,67 +174,58 @@
   background: var(--text-primary);
   color: var(--bg-color);
   border: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.95rem;
+  padding: 0.8rem 2rem;
+  border-radius: 0;
+  font-weight: 700;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .btnSynthesize:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  opacity: 0.9;
 }
 
 .btnSynthesize:disabled {
-  opacity: 0.7;
+  background: #333333;
+  color: #888888;
   cursor: not-allowed;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .5; }
 }
 
 /* Draft Terminal Panels */
 .draftTerminal {
-  margin-top: 1.5rem;
+  margin-top: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .draftBox {
-  background: rgba(0, 0, 0, 0.4);
   border: 1px solid var(--glass-border);
-  border-radius: 12px;
-  padding: 1.5rem;
+  padding: 2rem;
   position: relative;
+  background: var(--surface-hover);
 }
 
 .draftPlatform {
   position: absolute;
-  top: -10px;
+  top: -12px;
   left: 15px;
-  background: var(--bg-color);
-  border: 1px solid var(--glass-border);
-  padding: 0.2rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  background: var(--text-primary);
+  border: 1px solid var(--text-primary);
+  padding: 0.1rem 0.6rem;
+  font-size: 0.65rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--accent-hover);
+  letter-spacing: 0.15em;
+  color: var(--bg-color);
 }
 
 .draftBody {
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-size: 1rem;
+  line-height: 1.7;
   color: var(--text-primary);
   margin: 0;
   white-space: pre-wrap;
@@ -227,41 +233,56 @@
 
 .publishActions {
   display: flex;
-  gap: 0.75rem;
+  gap: 1rem;
   justify-content: flex-end;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
 }
 
 .btnPublish {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  color: var(--text-primary);
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  font-weight: 500;
-  font-size: 0.85rem;
+  background: var(--text-primary);
+  border: 1px solid var(--text-primary);
+  color: var(--bg-color);
+  padding: 0.7rem 1.5rem;
+  border-radius: 0;
+  font-weight: 600;
+  font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .btnPublish:hover {
-  background: var(--surface-hover);
-  border-color: var(--glass-border-hover);
+  opacity: 0.8;
 }
 
+/* Simplified variants for B&W */
 .btnPublishX {
-  background: var(--x-brand);
-  border-color: var(--glass-border);
-}
-.btnPublishX:hover {
-  background: #111;
-  border-color: var(--text-secondary);
+  background: var(--text-primary);
+  color: var(--bg-color);
 }
 
 .btnPublishLn {
-  background: var(--linkedin-brand);
-  border-color: #0b78e2;
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--text-primary);
 }
-.btnPublishLn:hover {
-  background: #004182;
+
+.btnCopy {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 0.7rem 1.5rem;
+  border-radius: 0;
+  font-weight: 500;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.btnCopy:hover {
+  border-color: var(--text-primary);
+  color: var(--text-primary);
 }
