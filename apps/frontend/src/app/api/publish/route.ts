@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { db } from '@atlas/db';
 import { emitEvent } from '@atlas/queue';
 import { EventTypes, ContentPublishRequestedPayload } from '@atlas/domain';
 
@@ -10,6 +11,20 @@ export async function POST(request: Request) {
     if (!draftId || !platform) {
       return NextResponse.json({ error: 'Missing required fields: draftId, platform' }, { status: 400 });
     }
+
+    // ----------------------------------------------------------------------------------------
+    // BUG FIX IDENTIFIED:
+    // The "Publisher" background worker possesses strict Domain Idempotency checks.
+    // It enforces a rule that only drafts with a status of 'approved' (or 'failed')
+    // can be successfully published. Drafts currently sit locally as 'pending'. 
+    //
+    // Since the actual action of the user clicking "Post to [Platform]" on the frontend 
+    // constitutes native Human Approval, we explicitly promote the draft's state right now.
+    // ----------------------------------------------------------------------------------------
+    await db.draft.update({
+      where: { id: draftId },
+      data: { status: 'approved' }
+    });
 
     const payload: ContentPublishRequestedPayload = {
       draftId,

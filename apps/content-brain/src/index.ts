@@ -183,7 +183,7 @@ function startWorker() {
   console.log("Atlas content-brain worker online");
   console.log(`Listening strictly for ${EventTypes.CONTENT_DRAFT_REQUESTED}...\\n`);
 
-  const worker = createEventWorker(async (event: AtlasEvent) => {
+  const worker = createEventWorker(EventTypes.CONTENT_DRAFT_REQUESTED, async (event: AtlasEvent) => {
     if (event.eventType === EventTypes.CONTENT_DRAFT_REQUESTED) {
       await processDraftPipeline(event.payload as ContentDraftRequestedPayload);
     }

@@ -33,10 +33,10 @@ const PUBLISH_RETRY_CONFIG = {
 
 // ─── Worker ─────────────────────────────────────────────────────────────────
 
-const worker = createEventWorker(async (event: AtlasEvent) => {
+const worker = createEventWorker(EventTypes.CONTENT_PUBLISH_REQUESTED, async (event: AtlasEvent) => {
   if (event.eventType === EventTypes.CONTENT_PUBLISH_REQUESTED) {
     const payload = event.payload as ContentPublishRequestedPayload;
-    console.log(`[Worker] Handling ${event.eventType} for draft ${payload.draftId}`);
+    console.log(`\n🚀 [Publisher Worker] Woke up! Someone clicked 'Post' for draft -> ${payload.draftId}`);
     await handlePublishRequested(payload);
   }
   // Other event types can be routed here as the service grows
@@ -56,9 +56,15 @@ worker.on('failed', async (job, err) => {
 
   const { draftId, platform } = event.payload as ContentPublishRequestedPayload;
   const attemptsMade = job.attemptsMade;
+  const maxAttempts = job.opts.attempts || 1;
+
+  if (attemptsMade < maxAttempts) {
+    console.log(`\n🚀 [Publisher Worker] ⚠️ Attempt ${attemptsMade}/${maxAttempts} failed. BullMQ will retry automatically...`);
+    return;
+  }
 
   console.error(
-    `[Worker] 💀 Draft ${draftId} failed after ${attemptsMade} attempt(s): ${err.message}`
+    `\n🚀 [Publisher Worker] 💀 All ${maxAttempts} attempts failed. Giving up on this draft.`
   );
 
   // Update draft status to permanently failed

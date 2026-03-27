@@ -33,6 +33,7 @@ export async function handlePublishRequested(
   const { draftId, platform } = payload;
 
   // ─── 1. Atomic claim (Duplicate Protection) ─────────────────────────
+  console.log(`\n📢 [Publisher] Step 1: Checking if draft ${draftId} is officially approved for publishing...`);
   const claimResult = await db.draft.updateMany({
     where: { 
       id: draftId,
@@ -42,15 +43,17 @@ export async function handlePublishRequested(
   });
 
   if (claimResult.count === 0) {
-    console.log(`[Publisher] Draft ${draftId} cannot be published (invalid state or already locked).`);
+    console.log(`📢 [Publisher] ❌ Stopped! This draft is not approved yet, or it's currently locked by another process.`);
     return;
   }
 
   // Fetch the latest draft details now that we have claimed it
+  console.log(`📢 [Publisher] Step 2: Database check passed! Fetching the text we need to post...`);
   const draft = await db.draft.findUnique({ where: { id: draftId } });
   if (!draft) return; // Should never happen unless deleted concurrently
 
   // ─── 2. Format payload ────────────────────────────────────────────────
+  console.log(`📢 [Publisher] Step 3: Properly formatting the text specifically for ${platform}...`);
   const domainDraft = {
     ...draft,
     platform: draft.platform as 'x' | 'linkedin',
@@ -66,6 +69,7 @@ export async function handlePublishRequested(
   // ─── 3. Post to platform ──────────────────────────────────────────────
   // Catch errors to revert status, then re-throw for BullMQ retry logic.
   let externalPostId: string;
+  console.log(`📢 [Publisher] Step 4: Making the official external request to ${platform}'s servers...`);
 
   try {
     if (platform === 'x' && formatted.platform === 'x') {
@@ -80,6 +84,8 @@ export async function handlePublishRequested(
       throw new Error(`Unsupported platform: ${platform}`);
     }
   } catch (err: any) {
+    console.log(`📢 [Publisher] ❌ Failed to post! The external platform (${platform}) completely rejected our request.`);
+    console.log(`📢 [Publisher] Reverting database status heavily to 'failed' so our automatic retry system can try again.`);
     // Revert status to 'failed' so BullMQ retries can pick it up again
     await db.draft.update({
       where: { id: draftId },
@@ -89,14 +95,16 @@ export async function handlePublishRequested(
   }
 
   // ─── 4. Update Draft status ───────────────────────────────────────────
+  console.log(`📢 [Publisher] Step 5: Success! Saving the live link ID to our database.`);
   await db.draft.update({
     where: { id: draftId },
     data: { status: 'published', externalPostId },
   });
 
-  console.log(`[Publisher] ✅ Published draft ${draftId} → ${platform} (postId: ${externalPostId})`);
+  console.log(`📢 [Publisher] 🎉 The post is officially live on ${platform} with ID: ${externalPostId}`);
 
   // ─── 5. Emit success event ────────────────────────────────────────────
+  console.log(`📢 [Publisher] Step 6: Telling the Orchestrator that we finished our job.`);
   await emitEvent(EventTypes.CONTENT_PUBLISHED, {
     draftId,
     platform,

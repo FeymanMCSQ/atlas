@@ -12,23 +12,17 @@ import { Queue, Worker, type Job, type JobsOptions } from "bullmq";
 import { type EventType, type EventPayloadMap, type AtlasEvent } from "@atlas/domain";
 import { getRedisConnection } from "./connection.js";
 
-const QUEUE_NAME = "atlas-events";
-
 // ─── Producer ────────────────────────────────────────────────────────
 
-let eventQueue: Queue | null = null;
+const queues = new Map<string, Queue>();
 
-/**
- * Returns the singleton event queue instance.
- * Lazily initializes on first call.
- */
-export function getEventQueue(): Queue {
-  if (!eventQueue) {
-    eventQueue = new Queue(QUEUE_NAME, {
+export function getEventQueue(queueName: string): Queue {
+  if (!queues.has(queueName)) {
+    queues.set(queueName, new Queue(queueName, {
       connection: getRedisConnection(),
-    });
+    }));
   }
-  return eventQueue;
+  return queues.get(queueName)!;
 }
 
 /**
@@ -44,7 +38,7 @@ export async function emitEvent<T extends EventType>(
   payload: T extends keyof EventPayloadMap ? EventPayloadMap[T] : never,
   jobOptions?: JobsOptions
 ): Promise<Job> {
-  const queue = getEventQueue();
+  const queue = getEventQueue(eventType);
 
   const event: AtlasEvent<T> = {
     eventId: crypto.randomUUID(),
@@ -65,16 +59,15 @@ export async function emitEvent<T extends EventType>(
 // ─── Consumer ────────────────────────────────────────────────────────
 
 /**
- * Create a worker that processes Atlas events.
- *
- * @param handler - Async function called for each event
- * @returns The BullMQ Worker instance
+ * Create a worker that processes Atlas events from a rigidly assigned channel.
+ * This prevents the "competing consumer" silent-drop bug!
  */
 export function createEventWorker(
+  queueName: string,
   handler: (event: AtlasEvent) => Promise<void>
 ): Worker {
   const worker = new Worker(
-    QUEUE_NAME,
+    queueName,
     async (job: Job) => {
       const event = job.data as AtlasEvent;
       await handler(event);
@@ -87,13 +80,9 @@ export function createEventWorker(
 
 // ─── Cleanup ─────────────────────────────────────────────────────────
 
-/**
- * Gracefully close the queue connection.
- * Call this during shutdown.
- */
-export async function closeQueue(): Promise<void> {
-  if (eventQueue) {
-    await eventQueue.close();
-    eventQueue = null;
+export async function closeQueue(queueName: string): Promise<void> {
+  if (queues.has(queueName)) {
+    await queues.get(queueName)!.close();
+    queues.delete(queueName);
   }
 }

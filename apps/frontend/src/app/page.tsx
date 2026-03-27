@@ -68,6 +68,14 @@ export default function AtlasDashboard() {
     });
   };
 
+  const selectAllFeeds = () => {
+    setSelectedFeeds(new Set(feeds.map(f => f.id)));
+  };
+
+  const deselectAllFeeds = () => {
+    setSelectedFeeds(new Set());
+  };
+
   const synthesizeSignal = async (signalId: string) => {
     setProcessing(prev => ({ ...prev, [signalId]: true }));
     
@@ -113,6 +121,12 @@ export default function AtlasDashboard() {
 
       {/* Top Section: RSS Menu */}
       <section className={styles.ribbon}>
+        {feeds.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginRight: '1rem', paddingRight: '1rem', borderRight: '1px solid var(--glass-border)' }}>
+            <button className={`${styles.chip} ${styles.chipAction}`} onClick={selectAllFeeds}>Select All</button>
+            <button className={`${styles.chip} ${styles.chipAction}`} onClick={deselectAllFeeds}>Deselect All</button>
+          </div>
+        )}
         {feeds.map(feed => (
           <div 
             key={feed.id}

@@ -68,6 +68,20 @@
   box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
 }
 
+.chipAction {
+  background: transparent;
+  border-color: var(--text-secondary);
+  border-style: dashed;
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+.chipAction:hover {
+  background: var(--surface-hover);
+  border-style: solid;
+  opacity: 1;
+}
+
 /* Middle Grid */
 .grid {
   display: grid;

@@ -58,9 +58,10 @@ export function formatDraftForPlatform(
 function formatForX(draft: Draft): XPayload {
   let text = draft.body.trim();
 
-  // X hard limit — truncate with ellipsis if needed
+  // X hard limit (280 weighted characters)
+  // Our ellipsis character counts as 2, so we slice at 278 to be safe (277 + 2 = 279 weighted)
   if (text.length > X_MAX_CHARS) {
-    text = text.slice(0, X_MAX_CHARS - 1) + '…';
+    text = text.slice(0, X_MAX_CHARS - 3) + '…';
   }
 
   return {
