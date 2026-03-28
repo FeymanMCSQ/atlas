@@ -30,7 +30,6 @@ const CORE_FEEDS = [
   { name: 'First Round Review', url: 'https://review.firstround.com/glossary/rss/' },
   { name: 'YC Blog', url: 'https://blog.ycombinator.com/feed/' },
   { name: 'Paul Graham Essays', url: 'https://raw.githubusercontent.com/leontloveless/ai-rss-feeds/main/feeds/paul-graham.xml' },
-  { name: 'Seth Godin', url: 'https://feeds.feedblitz.com/sethsblog' },
   { name: 'Farnam Street', url: 'https://fs.blog/feed/' },
   { name: 'CTO Craft', url: 'https://ctocraft.com/feed/' },
   { name: 'Hacker News', url: 'https://news.ycombinator.com/rss' },
@@ -38,7 +37,6 @@ const CORE_FEEDS = [
   { name: 'DigitalOcean Blog', url: 'https://www.digitalocean.com/blog/rss/' },
   { name: 'PostHog', url: 'https://posthog.com/rss.xml' },
   { name: 'HashiCorp Blog', url: 'https://www.hashicorp.com/blog/feed.xml' },
-  { name: 'Vercel Blog', url: 'https://vercel.com/atom' },
 ];
 
 // ---------------------------------------------------------------------------
