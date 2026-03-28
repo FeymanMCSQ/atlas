@@ -7,53 +7,139 @@
  */
 
 import Parser from "rss-parser";
+import https from "https";
+import http from "http";
 import { db } from "@atlas/db";
 import { emitEvent, closeQueue } from "@atlas/queue";
 import { EventTypes, ContentIngestedPayload } from "@atlas/domain";
 
+// ---------------------------------------------------------------------------
+// Canonical feed list — this is the SINGLE source of truth.
+// If a URL is not in this list, it gets deactivated in the database.
+// ---------------------------------------------------------------------------
+const CORE_FEEDS = [
+  { name: 'Netflix TechBlog', url: 'https://netflixtechblog.com/feed' },
+  { name: 'CNCF Blog', url: 'https://www.cncf.io/blog/feed/' },
+  { name: 'Uber Engineering', url: 'https://www.uber.com/en-US/blog/engineering/rss/' },
+  { name: 'Lennys Newsletter', url: 'https://www.lennysnewsletter.com/feed' },
+  { name: 'GitHub Blog', url: 'https://github.blog/feed/' },
+  { name: 'Google Research AI', url: 'https://research.google/blog/rss/' },
+  { name: 'Microsoft Dev Hub', url: 'https://devblogs.microsoft.com/feed/' },
+  { name: 'AWS News Blog', url: 'https://aws.amazon.com/blogs/aws/feed/' },
+  { name: 'The Pragmatic Engineer', url: 'https://blog.pragmaticengineer.com/rss/' },
+  { name: 'First Round Review', url: 'https://review.firstround.com/glossary/rss/' },
+  { name: 'YC Blog', url: 'https://blog.ycombinator.com/feed/' },
+  { name: 'Paul Graham Essays', url: 'https://raw.githubusercontent.com/leontloveless/ai-rss-feeds/main/feeds/paul-graham.xml' },
+  { name: 'Seth Godin', url: 'https://feeds.feedblitz.com/sethsblog' },
+  { name: 'Farnam Street', url: 'https://fs.blog/feed/' },
+  { name: 'CTO Craft', url: 'https://ctocraft.com/feed/' },
+  { name: 'Hacker News', url: 'https://news.ycombinator.com/rss' },
+  { name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml' },
+  { name: 'DigitalOcean Blog', url: 'https://www.digitalocean.com/blog/rss/' },
+  { name: 'PostHog', url: 'https://posthog.com/rss.xml' },
+  { name: 'HashiCorp Blog', url: 'https://www.hashicorp.com/blog/feed.xml' },
+  { name: 'Vercel Blog', url: 'https://vercel.com/atom' },
+];
+
+// ---------------------------------------------------------------------------
+// Custom XML fetcher — fetches the raw XML ourselves using Node's built-in
+// http/https modules. This lets us bypass issues where rss-parser's internal
+// fetcher gets blocked by Cloudflare or other WAFs.
+// ---------------------------------------------------------------------------
+function fetchXML(url: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith('https') ? https : http;
+    const req = client.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.94 Safari/537.36',
+        'Accept': 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+      timeout: 15000,
+      // @ts-ignore
+      rejectUnauthorized: false,
+    }, (res) => {
+      // Follow redirects
+      if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        fetchXML(res.headers.location).then(resolve).catch(reject);
+        return;
+      }
+      if (res.statusCode && res.statusCode >= 400) {
+        reject(new Error(`HTTP ${res.statusCode}`));
+        return;
+      }
+      let data = '';
+      res.on('data', (chunk: string) => data += chunk);
+      res.on('end', () => resolve(data));
+      res.on('error', reject);
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
+  });
+}
+
 async function processFeeds(): Promise<void> {
-  console.log(`[Feed Ingestor] Starting ingestion polling un (${new Date().toISOString()})...`);
+  console.log(`[Feed Ingestor] Starting ingestion (${new Date().toISOString()})...`);
 
   const parser = new Parser({
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-    }
+    customFields: {
+      item: [['content:encoded', 'contentEncoded']]
+    },
   });
 
-  // 1. Fetch all active feeds globally
-  let activeFeeds = await db.feedSource.findMany({
+  // ---- Step 1: Sync the canonical feed list to the database ----
+  const coreUrls = CORE_FEEDS.map(f => f.url);
+  
+  console.log(`[Feed Ingestor] Syncing ${CORE_FEEDS.length} system feeds...`);
+  for (const feed of CORE_FEEDS) {
+    await db.feedSource.upsert({ 
+      where: { url: feed.url }, 
+      create: { name: feed.name, url: feed.url, isActive: true },
+      update: { name: feed.name, isActive: true } 
+    });
+  }
+
+  // Deactivate any feeds NOT in the canonical list (removes legacy duplicates)
+  await db.feedSource.updateMany({
+    where: { url: { notIn: coreUrls } },
+    data: { isActive: false }
+  });
+
+  // ---- Step 2: Fetch all active feeds ----
+  const activeFeeds = await db.feedSource.findMany({
     where: { isActive: true },
   });
 
-  if (activeFeeds.length === 0) {
-    console.log(`[Feed Ingestor] No active feeds found in database. Bootstrapping defaults...`);
-    const coreFeeds = [
-      { name: 'Netflix TechBlog', url: 'https://netflixtechblog.com/feed' },
-      { name: 'CNCF Blog', url: 'https://www.cncf.io/blog/feed/' },
-      { name: 'Uber Engineering', url: 'https://www.uber.com/en-US/blog/engineering/rss/' },
-      { name: 'Indie Hackers', url: 'https://www.indiehackers.com/feed.xml' },
-      { name: 'Lennys Newsletter', url: 'https://www.lennysnewsletter.com/feed' }
-    ];
-    for (const feed of coreFeeds) {
-      await db.feedSource.upsert({ 
-        where: { url: feed.url }, 
-        create: { name: feed.name, url: feed.url, isActive: true },
-        update: { isActive: true } 
-      });
-    }
-    // Re-fetch
-    activeFeeds = await db.feedSource.findMany({ where: { isActive: true } });
-  }
+  console.log(`[Feed Ingestor] Processing ${activeFeeds.length} active feeds...\n`);
 
   for (const source of activeFeeds) {
-    console.log(`\\n[Feed Ingestor] Fetching: ${source.name} -> ${source.url}`);
+    console.log(`[Feed Ingestor] Fetching: ${source.name} -> ${source.url}`);
 
     try {
-      const feed = await parser.parseURL(source.url);
+      // Fetch XML ourselves to bypass WAF/Cloudflare blocks
+      const xml = await fetchXML(source.url);
       
-      // We only process the 5 most recent items per run to prevent queue swamping 
-      // when bootstrapping an old legacy RSS feed for the first time.
+      // Parse with rss-parser from the raw string (avoids its internal fetcher)
+      let feed;
+      try {
+        feed = await parser.parseString(xml);
+      } catch (parseErr: any) {
+        // If rss-parser chokes on bad dates or malformed XML, try a lenient parse
+        console.warn(`[Feed Ingestor] ⚠️  Parser error for ${source.name}, attempting lenient parse...`);
+        
+        // Strip or fix common XML issues before re-parsing
+        const cleaned = xml
+          .replace(/&(?!amp;|lt;|gt;|quot;|apos;|#)/g, '&amp;') // Fix unescaped &
+          .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '');       // Strip control chars
+        
+        try {
+          feed = await parser.parseString(cleaned);
+        } catch {
+          console.error(`[Feed Ingestor] ❌ ${source.name}: Could not parse XML at all. Skipping.`);
+          continue;
+        }
+      }
+      
       const latestItems = feed.items.slice(0, 5);
       let ingestedCount = 0;
 
@@ -62,28 +148,22 @@ async function processFeeds(): Promise<void> {
         const url = item.link?.trim() || "No URL";
         const summary = (item.contentSnippet || item.content || "").trim();
 
-        // Deduplication: Avoid storing items we've already parsed historically
-        const existingItem = await db.contentItem.findUnique({
-          where: { url },
-        });
+        if (url === "No URL") continue;
 
-        if (existingItem) {
-          continue;
-        }
+        // Deduplication
+        const existingItem = await db.contentItem.findUnique({ where: { url } });
+        if (existingItem) continue;
 
-        // Generate signal record
         const contentItem = await db.contentItem.create({
           data: {
             source: source.id,
             title,
             url,
             summary,
-            // Pack the unstructured data into metadata dump mappings
             sourceData: item as any,
           },
         });
 
-        // Event Hook: Trigger Orchestrator matching 03_event_flow limits.
         const payload: ContentIngestedPayload = {
           contentItemId: contentItem.id,
           source: source.name,
@@ -94,37 +174,30 @@ async function processFeeds(): Promise<void> {
         ingestedCount++;
       }
 
-      console.log(`[Feed Ingestor] ✅ Finished ${source.name}: ${ingestedCount} new items ingested.`);
+      console.log(`[Feed Ingestor] ✅ ${source.name}: ${ingestedCount} new items ingested.`);
 
-      // Update successful sync metadata
       await db.feedSource.update({
         where: { id: source.id },
         data: { lastFetched: new Date() },
       });
 
-    } catch (err) {
-      console.error(`[Feed Ingestor] ❌ Failed resolving feed ${source.url}:`, err);
+    } catch (err: any) {
+      console.error(`[Feed Ingestor] ❌ ${source.name}: ${err.message || err}`);
     }
   }
 
-  console.log(`\\n[Feed Ingestor] Polling cycle complete.`);
+  console.log(`\n[Feed Ingestor] Polling cycle complete.`);
 }
 
-/**
- * Executes a single ingestion burst then shuts down cleanly (ideal for CRON).
- * Alternately, this could run via a setInterval for standard Node long-polling.
- */
 async function startWorker() {
   try {
     await processFeeds();
   } catch (error) {
     console.error(`[Feed Ingestor] Fatal system fault:`, error);
   } finally {
-    await closeQueue();
+    await closeQueue(EventTypes.CONTENT_INGESTED);
     process.exit(0);
   }
 }
 
-// In standard microservice arch, Kubernetes CRON spawns this index.
-// Alternatively, for local dev, just running it natively executes one sweep!
 startWorker();
