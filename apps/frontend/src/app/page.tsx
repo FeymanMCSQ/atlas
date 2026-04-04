@@ -12,11 +12,16 @@ export default function AtlasDashboard() {
   const [feeds, setFeeds] = useState<Feed[]>([]);
   const [selectedFeeds, setSelectedFeeds] = useState<Set<string>>(new Set());
   const [signals, setSignals] = useState<Signal[]>([]);
+  const [selectedMode, setSelectedMode] = useState<Record<string, string>>({});
+  const [selectedAIModel, setSelectedAIModel] = useState<string>('google/gemini-3-flash-preview');
   
   const [draftsMap, setDraftsMap] = useState<Record<string, Draft[]>>({});
   const [processing, setProcessing] = useState<Record<string, boolean>>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  
+  const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+  const [editBody, setEditBody] = useState<string>('');
   
   // Track intervals per signal to avoid overlap in active polls
   const pollIntervals = useRef<Record<string, NodeJS.Timeout>>({});
@@ -91,13 +96,13 @@ export default function AtlasDashboard() {
     setSelectedFeeds(new Set());
   };
 
-  const synthesizeSignal = async (signalId: string) => {
+  const synthesizeSignal = async (signalId: string, mode: string) => {
     setProcessing(prev => ({ ...prev, [signalId]: true }));
     
     // 1. Fire the emission request
     await fetch('/api/synthesize', {
       method: 'POST',
-      body: JSON.stringify({ contentItemId: signalId }),
+      body: JSON.stringify({ contentItemId: signalId, mode, model: selectedAIModel }),
     });
 
     // 2. Begin rigorous polling mechanism 
@@ -133,6 +138,22 @@ export default function AtlasDashboard() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const saveEdit = async (signalId: string, draftId: string) => {
+    await fetch('/api/drafts', {
+      method: 'PATCH',
+      body: JSON.stringify({ draftId, body: editBody })
+    });
+    
+    setDraftsMap(prev => {
+      const signalDrafts = prev[signalId].map(d => 
+        d.id === draftId ? { ...d, body: editBody } : d
+      );
+      return { ...prev, [signalId]: signalDrafts };
+    });
+    setEditingDraftId(null);
+    setEditBody('');
+  };
+
   return (
     <main className={styles.container}>
       <header className={styles.header}>
@@ -141,9 +162,23 @@ export default function AtlasDashboard() {
             <h1 className={styles.title}>Atlas Neural Control</h1>
             <p className={styles.subtitle}>Autonomous B2B SaaS Content Generation Engine</p>
           </div>
-          <button className={styles.themeToggle} onClick={toggleTheme} aria-label="Toggle Theme">
-            {theme === 'light' ? '● Dark Mode' : '○ Light Mode'}
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <select 
+              className={styles.modeSelect} 
+              style={{ margin: 0, padding: '0.5rem 1rem' }}
+              value={selectedAIModel} 
+              onChange={(e) => setSelectedAIModel(e.target.value)}
+            >
+              <option value="google/gemini-3-flash-preview">google/gemini-3-flash-preview</option>
+              <option value="anthropic/claude-opus-4.6">anthropic/claude-opus-4.6</option>
+              <option value="x-ai/grok-4.1-fast">x-ai/grok-4.1-fast</option>
+              <option value="x-ai/grok-4.20">x-ai/grok-4.20</option>
+              <option value="moonshotai/kimi-k2.5">moonshotai/kimi-k2.5</option>
+            </select>
+            <button className={styles.themeToggle} onClick={toggleTheme} aria-label="Toggle Theme">
+              {theme === 'light' ? '● Dark Mode' : '○ Light Mode'}
+            </button>
+          </div>
         </div>
       </header>
 
@@ -184,9 +219,18 @@ export default function AtlasDashboard() {
               
               {!drafts && (
                  <div className={styles.cardActions}>
+                   <select
+                     className={styles.modeSelect}
+                     value={selectedMode[signal.id] || 'INFORMATION'}
+                     onChange={(e) => setSelectedMode(prev => ({ ...prev, [signal.id]: e.target.value }))}
+                     disabled={isProcessing}
+                   >
+                     <option value="INFORMATION">Information Mode</option>
+                     <option value="FOUNDER">Founder Mode</option>
+                   </select>
                    <button 
                      className={styles.btnSynthesize} 
-                     onClick={() => synthesizeSignal(signal.id)}
+                     onClick={() => synthesizeSignal(signal.id, selectedMode[signal.id] || 'INFORMATION')}
                      disabled={isProcessing}
                    >
                      {isProcessing ? '⚡ Generating AI Narrative...' : 'Synthesize Post ✨'}
@@ -200,21 +244,47 @@ export default function AtlasDashboard() {
                    {drafts.map(d => (
                      <div key={d.id} className={styles.draftBox}>
                        <span className={styles.draftPlatform}>{d.platform}</span>
-                       <p className={styles.draftBody}>{d.body}</p>
-                        <div className={styles.publishActions}>
-                          <button 
-                            className={`${styles.btnPublish} ${d.platform === 'x' ? styles.btnPublishX : styles.btnPublishLn}`}
-                            onClick={() => triggerPublish(d.id, d.platform, signal.id)}
-                          >
-                            Post to {d.platform === 'x' ? 'X' : 'LinkedIn'}
-                          </button>
-                          <button 
-                            className={styles.btnCopy} 
-                            onClick={() => copyToClipboard(d.body, d.id)}
-                          >
-                            {copiedId === d.id ? '✓ Copied!' : 'Copy Post'}
-                          </button>
-                        </div>
+
+                       {editingDraftId === d.id ? (
+                         <div className={styles.editContainer}>
+                           <textarea 
+                             className={styles.editTextArea} 
+                             value={editBody} 
+                             onChange={(e) => setEditBody(e.target.value)}
+                           />
+                           <div className={styles.publishActions} style={{marginTop: 0}}>
+                             <button className={styles.btnPublishX} onClick={() => saveEdit(signal.id, d.id)}>Save Changes</button>
+                             <button className={styles.btnCopy} onClick={() => setEditingDraftId(null)}>Cancel</button>
+                           </div>
+                         </div>
+                       ) : (
+                         <>
+                           <p className={styles.draftBody}>{d.body}</p>
+                           <div className={styles.publishActions}>
+                             <button 
+                               className={styles.btnCopy} 
+                               onClick={() => {
+                                 setEditingDraftId(d.id);
+                                 setEditBody(d.body);
+                               }}
+                             >
+                               ✎ Edit
+                             </button>
+                             <button 
+                               className={`${styles.btnPublish} ${d.platform === 'x' ? styles.btnPublishX : styles.btnPublishLn}`}
+                               onClick={() => triggerPublish(d.id, d.platform, signal.id)}
+                             >
+                               Post to {d.platform === 'x' ? 'X' : 'LinkedIn'}
+                             </button>
+                             <button 
+                               className={styles.btnCopy} 
+                               onClick={() => copyToClipboard(d.body, d.id)}
+                             >
+                               {copiedId === d.id ? '✓ Copied!' : 'Copy'}
+                             </button>
+                           </div>
+                         </>
+                       )}
                      </div>
                    ))}
                    <div className={styles.publishActions} style={{borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '10px', marginTop: '10px'}}>

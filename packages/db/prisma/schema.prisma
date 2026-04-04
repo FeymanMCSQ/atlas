@@ -12,6 +12,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum ContentMode {
+  INFORMATION
+  FOUNDER
+}
+
 model FeedSource {
   id          String    @id @default(uuid())
   name        String
@@ -24,10 +29,11 @@ model FeedSource {
 }
 
 model ContentItem {
-  id           String     @id @default(uuid())
+  id           String      @id @default(uuid())
   source       String
   title        String
-  url          String     @unique
+  url          String      @unique
+  mode         ContentMode @default(INFORMATION)
   summary      String?
   sourceData   Json?      @default("{}")
 

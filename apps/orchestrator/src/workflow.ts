@@ -49,9 +49,9 @@ export interface WorkflowAction {
 
 const workflowMap: Record<EventType, WorkflowAction> = {
   [EventTypes.CONTENT_INGESTED]: {
-    nextEvent: EventTypes.CONTENT_DRAFT_REQUESTED,
-    description: "Request drafts for the ingested content",
-    requiresHumanAction: false,
+    nextEvent: null, // Disabled automatic token burn
+    description: "Content ingested. Waiting for human to manually trigger Synthesize in UI.",
+    requiresHumanAction: true,
   },
 
   [EventTypes.CONTENT_TRANSCRIBED]: {

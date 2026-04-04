@@ -1,7 +1,7 @@
 import { createEventWorker, emitEvent } from "@atlas/queue";
 import { EventTypes, AtlasEvent, ContentDraftRequestedPayload } from "@atlas/domain";
 import { db } from "@atlas/db";
-import { Prompts } from "@atlas/prompts";
+import { FounderPrompts, InformationPrompts } from "@atlas/prompts";
 
 import { z } from "zod";
 import { generateObject } from "ai";
@@ -17,8 +17,8 @@ const provider = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY
 });
 
-// We use the flash preview model as designated by implementation KI and prompt package tests
-const MODEL_NAME = 'google/gemini-3-flash-preview';
+// We use the flash preview model as default fallback
+const DEFAULT_MODEL = 'google/gemini-3-flash-preview';
 
 /**
  * Zod schemas representing the strictly bounded outputs required for each
@@ -44,7 +44,7 @@ const DraftSchema = z.object({
 });
 
 const EvalSchema = z.object({
-  score: z.number().min(1).max(10).describe("A strict numerical score reflecting how closely the draft aligns with Atlas guidelines."),
+  score: z.number().describe("A strict numerical score from 1 to 10 reflecting how closely the draft aligns with Atlas guidelines."),
   flaws: z.array(z.string()).describe("A list of explicit flaws referencing the negative tone/structure traits.")
 });
 
@@ -76,12 +76,14 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
     return;
   }
 
-  console.log(`\n[Content Brain] Initiating 6-stage AI generation for ${item.id}...`);
+  const Prompts = item.mode === 'FOUNDER' ? FounderPrompts : InformationPrompts;
+  const targetModel = payload.model || DEFAULT_MODEL;
+  console.log(`\n[Content Brain] Initiating 6-stage AI generation for ${item.id} (MODE: ${item.mode}) (MODEL: ${targetModel})...`);
 
   try {
     // 1. Extract Signals
     const { object: signalsObj } = await generateObject({
-      model: provider(MODEL_NAME),
+      model: provider(targetModel),
       schema: ExtractSchema,
       prompt: Prompts.EXTRACT_SIGNALS.replace('{{content}}', rawContent),
     });
@@ -89,7 +91,7 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
 
     // 2. Frame Insight
     const { object: frameObj } = await generateObject({
-      model: provider(MODEL_NAME),
+      model: provider(targetModel),
       schema: FrameSchema,
       prompt: Prompts.FRAME_INSIGHT.replace('{{signals}}', signalsObj.signals.join('\n')),
     });
@@ -97,7 +99,7 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
 
     // 3. Generate Hooks
     const { object: hooksObj } = await generateObject({
-      model: provider(MODEL_NAME),
+      model: provider(targetModel),
       schema: HooksSchema,
       prompt: Prompts.GENERATE_HOOKS.replace('{{insight}}', frameObj.insight),
     });
@@ -106,7 +108,7 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
 
     // 4. Initial Draft Generation
     const { object: initialDraft } = await generateObject({
-      model: provider(MODEL_NAME),
+      model: provider(targetModel),
       schema: DraftSchema,
       prompt: Prompts.GENERATE_DRAFT
         .replace('{{hook}}', selectedHook)
@@ -116,7 +118,7 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
 
     // 5. Quality Critique (Evaluates the more rigid X post specifically for pacing)
     const { object: evalObj } = await generateObject({
-      model: provider(MODEL_NAME),
+      model: provider(targetModel),
       schema: EvalSchema,
       prompt: Prompts.EVALUATE_DRAFT.replace('{{draft}}', initialDraft.x_post),
     });
@@ -128,7 +130,7 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
     if (evalObj.score < 8 && evalObj.flaws.length > 0) {
       console.log(` > Stage 6: Score < 8. Triggering AI rewrite pipeline to address flaws...`);
       const { object: rewrittenDraft } = await generateObject({
-        model: provider(MODEL_NAME),
+        model: provider(targetModel),
         schema: DraftSchema,
         prompt: Prompts.REWRITE_DRAFT
           .replace('{{draft}}', `X: ${initialDraft.x_post}\n\nLinkedIn: ${initialDraft.linkedin_post}`)

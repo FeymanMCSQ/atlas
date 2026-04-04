@@ -60,6 +60,7 @@ export interface ContentTranscribedPayload {
 
 export interface ContentDraftRequestedPayload {
   contentItemId: string;
+  model?: string;
 }
 
 export interface ContentScoredPayload {
