@@ -5,7 +5,7 @@ import styles from './page.module.css';
 
 // Type declarations mapping our internal domain
 type Feed = { id: string; name: string; url: string; isActive: boolean };
-type Signal = { id: string; source: string; title: string; url: string; summary: string };
+type Signal = { id: string; source: string; title: string; url: string; summary: string; imageUrl?: string };
 type Draft = { id: string; contentItemId: string; platform: string; body: string; status: string };
 
 export default function AtlasDashboard() {
@@ -211,6 +211,11 @@ export default function AtlasDashboard() {
 
           return (
             <div key={signal.id} className={styles.card}>
+              {signal.imageUrl && (
+                <div className={styles.cardImageContainer}>
+                  <img src={signal.imageUrl} alt={signal.title} className={styles.cardImage} />
+                </div>
+              )}
               <div className={styles.cardHeader}>
                 <h3 className={styles.cardTitle}>{signal.title}</h3>
                 <span className={styles.cardSource}>{feedName}</span>

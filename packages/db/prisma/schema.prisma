@@ -33,6 +33,7 @@ model ContentItem {
   source       String
   title        String
   url          String      @unique
+  imageUrl     String?
   mode         ContentMode @default(INFORMATION)
   summary      String?
   sourceData   Json?      @default("{}")

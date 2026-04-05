@@ -9,6 +9,7 @@
 import Parser from "rss-parser";
 import https from "https";
 import http from "http";
+import * as cheerio from "cheerio";
 import { db } from "@atlas/db";
 import { emitEvent, closeQueue } from "@atlas/queue";
 import { EventTypes, ContentIngestedPayload } from "@atlas/domain";
@@ -74,6 +75,20 @@ function fetchXML(url: string): Promise<string> {
     req.on('error', reject);
     req.on('timeout', () => { req.destroy(); reject(new Error('Timeout')); });
   });
+}
+
+// ---------------------------------------------------------------------------
+// Scrapes the HTML of an external article to pull its professional thumbnail
+// ---------------------------------------------------------------------------
+async function fetchOgImage(url: string): Promise<string | undefined> {
+  try {
+    const html = await fetchXML(url);
+    const $ = cheerio.load(html);
+    return $("meta[property='og:image']").attr("content");
+  } catch (err) {
+    console.warn(`[Feed Ingestor] Could not fetch og:image for ${url}`);
+    return undefined;
+  }
 }
 
 async function processFeeds(): Promise<void> {
@@ -148,15 +163,28 @@ async function processFeeds(): Promise<void> {
 
         if (url === "No URL") continue;
 
-        // Deduplication
+        // Deduplication and Backfill
         const existingItem = await db.contentItem.findUnique({ where: { url } });
-        if (existingItem) continue;
+        if (existingItem) {
+          // If we added this before the scraper existed, backfill it!
+          if (!existingItem.imageUrl) {
+            const imageUrl = await fetchOgImage(url);
+            if (imageUrl) {
+              await db.contentItem.update({ where: { id: existingItem.id }, data: { imageUrl } });
+              console.log(`[Feed Ingestor] 🌠 Backfilled image for existing article: ${title}`);
+            }
+          }
+          continue;
+        }
+
+        const imageUrl = await fetchOgImage(url);
 
         const contentItem = await db.contentItem.create({
           data: {
             source: source.id,
             title,
             url,
+            imageUrl,
             summary,
             sourceData: item as any,
           },
