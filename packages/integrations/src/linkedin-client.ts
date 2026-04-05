@@ -10,18 +10,17 @@ export interface LinkedInPostResponse {
 /**
  * Sends a post to LinkedIn using the 2025 versioned API.
  */
-export async function postToLinkedIn(text: string): Promise<LinkedInPostResponse> {
+export async function postToLinkedIn(text: string, mediaUrn?: string): Promise<LinkedInPostResponse> {
   const token = process.env.LINKEDIN_ACCESS_TOKEN;
   const authorUrn = process.env.LINKEDIN_PERSON_URN;
 
   if (!token || !authorUrn) {
     throw new Error('LINKEDIN_ACCESS_TOKEN or LINKEDIN_PERSON_URN missing in .env');
   }
-
-  // Try multiple active versions as LinkedIn sunsets old versions frequently
-  const versionsToTry = ['202504', '202503', '202502', '202501'];
+  // Try multiple active versions as LinkedIn sunsets old versions frequently (1 yr lifetime)
+  const versionsToTry = ['202604', '202603', '202602', '202601', '202512'];
   
-  const body = JSON.stringify({
+  const bodyPayload: any = {
     author: authorUrn,
     commentary: text,
     visibility: 'PUBLIC',
@@ -32,7 +31,15 @@ export async function postToLinkedIn(text: string): Promise<LinkedInPostResponse
     },
     lifecycleState: 'PUBLISHED',
     isReshareDisabledByAuthor: false
-  });
+  };
+
+  if (mediaUrn) {
+    bodyPayload.content = {
+      media: {
+        id: mediaUrn
+      }
+    };
+  }
 
   for (const version of versionsToTry) {
     const response = await fetch('https://api.linkedin.com/rest/posts', {
@@ -43,7 +50,7 @@ export async function postToLinkedIn(text: string): Promise<LinkedInPostResponse
         'X-Restli-Protocol-Version': '2.0.0',
         'Content-Type': 'application/json'
       },
-      body
+      body: JSON.stringify(bodyPayload)
     });
 
     const responseText = await response.text();

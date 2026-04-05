@@ -61,6 +61,7 @@ model Draft {
   status         String   @default("pending") // "pending" | "approved" | "publishing" | "published" | "failed"
   qualityScore   Float?
   externalPostId String?  // Set after successful publish
+  mediaUrl       String?  // Final generated/scraped visual media for publishing
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

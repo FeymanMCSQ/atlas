@@ -14,8 +14,9 @@
 import { db } from '@atlas/db';
 import { EventTypes, type ContentPublishRequestedPayload } from '@atlas/domain';
 import { emitEvent } from '@atlas/queue';
-import { sendTweet } from '@atlas/integrations/src/x-client';
-import { postToLinkedIn } from '@atlas/integrations/src/linkedin-client';
+import { sendTweet } from '@atlas/integrations/src/x-client.js';
+import { postToLinkedIn } from '@atlas/integrations/src/linkedin-client.js';
+import { uploadImageToLinkedIn } from '@atlas/integrations/src/linkedin-media.js';
 import { formatDraftForPlatform } from './formatter.js';
 
 /**
@@ -59,6 +60,7 @@ export async function handlePublishRequested(
     platform: draft.platform as 'x' | 'linkedin',
     status: draft.status as 'pending' | 'approved' | 'published' | 'failed',
     qualityScore: draft.qualityScore,
+    mediaUrl: draft.mediaUrl,
   };
 
   const formatted = formatDraftForPlatform(
@@ -73,11 +75,20 @@ export async function handlePublishRequested(
 
   try {
     if (platform === 'x' && formatted.platform === 'x') {
+      // NOTE: X Image support planned for future phase, falling back to text.
       const result = await sendTweet(formatted.text);
       externalPostId = result.id;
 
     } else if (platform === 'linkedin' && formatted.platform === 'linkedin') {
-      const result = await postToLinkedIn(formatted.commentary);
+      let mediaUrn = undefined;
+      
+      if (domainDraft.mediaUrl) {
+         console.log(`📢 [Publisher] Step 3.5: Linking media URL to LinkedIn -> ${domainDraft.mediaUrl}`);
+         mediaUrn = await uploadImageToLinkedIn(domainDraft.mediaUrl);
+         console.log(`📢 [Publisher] 🎯 LinkedIn media registered successfully as ${mediaUrn}`);
+      }
+
+      const result = await postToLinkedIn(formatted.commentary, mediaUrn);
       externalPostId = result.id;
 
     } else {

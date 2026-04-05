@@ -2,6 +2,8 @@ import { createEventWorker, emitEvent } from "@atlas/queue";
 import { EventTypes, AtlasEvent, ContentDraftRequestedPayload } from "@atlas/domain";
 import { db } from "@atlas/db";
 import { FounderPrompts, InformationPrompts } from "@atlas/prompts";
+import { searchGoogleImages } from "@atlas/integrations/src/serper-client.js";
+import { generateImageWithFlux } from "@atlas/integrations/src/fal-client.js";
 
 import { z } from "zod";
 import { generateObject } from "ai";
@@ -142,6 +144,36 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
       console.log(` > Stage 6: Skipping rewrite (Quality is sufficient).`);
     }
 
+    // 6.5. Visual Image Attachment Strategy 2
+    let finalMediaUrl: string | undefined = undefined;
+    console.log(` > Stage 6.5: Acquring visual media for ${item.mode} mode...`);
+    try {
+      if (item.mode === 'FOUNDER') {
+        const imagePrompt = `A minimalist, high-contrast digital notebook sketchbook or blueprint design representing the concept of: ${frameObj.insight}. 
+        Aesthetic: "Build-in-public" scrappy tech entrepreneur. Hand-drawn wireframes, technical flowcharts, and minimalist geometric structural lines on a dark-mode background. 
+        It should look like an intelligent founder's brain dump on a digital whiteboard.
+        CRITICAL RULE: DO NOT include any text, letters, typography, or numbers. Keep it completely text-free and abstract.`;
+        finalMediaUrl = await generateImageWithFlux(imagePrompt);
+        console.log(`   🎨 AI Image Generated via Fal.ai -> ${finalMediaUrl}`);
+      } else {
+        // Information Mode
+        if (item.imageUrl) {
+          finalMediaUrl = item.imageUrl;
+          console.log(`   📸 Reusing ingested Publisher image -> ${finalMediaUrl}`);
+        } else {
+          console.log(`   🔍 No publisher image found. Searching Google for relevant logo...`);
+          const searchQuery = `${item.source} ${frameObj.insight.substring(0, 30)} logo high quality`;
+          const searched = await searchGoogleImages(searchQuery);
+          if (searched) {
+             finalMediaUrl = searched;
+             console.log(`   🌐 Found Search Image -> ${finalMediaUrl}`);
+          }
+        }
+      }
+    } catch (mediaErr) {
+       console.error(`   ⚠️ Failed to acquire visual media:`, mediaErr);
+    }
+
     // 7. Persist to Postgres
     const draftX = await db.draft.create({
       data: {
@@ -150,6 +182,7 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
         body: finalDraft.x_post,
         status: 'pending',
         qualityScore: evalObj.score,
+        mediaUrl: finalMediaUrl
       }
     });
 
@@ -160,6 +193,7 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
         body: finalDraft.linkedin_post,
         status: 'pending',
         qualityScore: evalObj.score,
+        mediaUrl: finalMediaUrl
       }
     });
 

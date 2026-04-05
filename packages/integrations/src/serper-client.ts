@@ -1,0 +1,36 @@
+/**
+ * serper-client.ts
+ * Integration with Serper.dev for autonomous Google Image Search falback.
+ */
+
+export async function searchGoogleImages(query: string): Promise<string | undefined> {
+  const SERPER_API_KEY = process.env.SERPER_KEY;
+  if (!SERPER_API_KEY) {
+    throw new Error("Missing SERPER_KEY in environment variables.");
+  }
+
+  const response = await fetch("https://google.serper.dev/images", {
+    method: "POST",
+    headers: {
+      "X-API-KEY": SERPER_API_KEY,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      q: query,
+      autoCorrect: true
+    })
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Serper API error: ${response.status} - ${errorBody}`);
+  }
+
+  const data = await response.json();
+  if (data.images && data.images.length > 0) {
+    // Return the URL of the top image result
+    return data.images[0].imageUrl;
+  }
+
+  return undefined;
+}
