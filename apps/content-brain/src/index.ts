@@ -50,6 +50,10 @@ const EvalSchema = z.object({
   flaws: z.array(z.string()).describe("A list of explicit flaws referencing the negative tone/structure traits.")
 });
 
+const ImageHeadlineSchema = z.object({
+  headline: z.string().describe("A hyper-condensed 4 to 7 word news headline representing the core insight.")
+});
+
 /**
  * AI Generation Pipeline orchestrator logic.
  */
@@ -71,6 +75,30 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
   } else {
     // Basic fallback for other sources like RSS or ingestions
     rawContent = item.summary || JSON.stringify(item.sourceData);
+
+    // Deep Web Information Mode Scraper (Jina Reader)
+    if ((item.mode === 'INFORMATION' || item.source.startsWith('[Trend]')) && item.url) {
+      console.log(`\n[Content Brain] 🕸️ Invoking Deep Scraper via Jina Reader: ${item.url}`);
+      try {
+        const jinaRes = await fetch(`https://r.jina.ai/${item.url}`, {
+          signal: AbortSignal.timeout(15000)
+        });
+        if (jinaRes.ok) {
+           const deepMarkdown = await jinaRes.text();
+           if (deepMarkdown && deepMarkdown.length > 50) {
+             // Hard cap at 8,000 characters to prevent token ingestion explosion
+             rawContent = deepMarkdown.substring(0, 8000); 
+             console.log(`[Content Brain] ✅ Deep Scrape successful: ${rawContent.length} chars stored for contextual analysis.`);
+           } else {
+             console.log(`[Content Brain] ⚠️ Deep Scrape returned blank markdown, falling back to summary.`);
+           }
+        } else {
+           console.log(`[Content Brain] ⚠️ Deep Scrape blocked (HTTP ${jinaRes.status}), falling back to summary.`);
+        }
+      } catch (e: any) {
+         console.warn(`[Content Brain] ⚠️ Deep Scrape timeout/failure: ${e.message}. Using fallback.`);
+      }
+    }
   }
 
   if (!rawContent || rawContent.trim() === '') {
@@ -87,7 +115,9 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
     const { object: signalsObj } = await generateObject({
       model: provider(targetModel),
       schema: ExtractSchema,
-      prompt: Prompts.EXTRACT_SIGNALS.replace('{{content}}', rawContent),
+      prompt: Prompts.EXTRACT_SIGNALS
+          .replace('{{title}}', item.title)
+          .replace('{{content}}', rawContent),
     });
     console.log(` > Stage 1: Extracted ${signalsObj.signals.length} signals.`);
 
@@ -108,13 +138,30 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
     const selectedHook = hooksObj.hooks[0];
     console.log(` > Stage 3: Generated hooks. Selected -> "${selectedHook}"`);
 
+    // 3.5 Check Resonance Engine for Viral Templates
+    const templates = await db.postTemplate.findMany();
+    let draftPrompt = Prompts.GENERATE_DRAFT
+      .replace('{{hook}}', selectedHook)
+      .replace('{{insight}}', frameObj.insight);
+
+    if (templates.length > 0) {
+      const template = templates[Math.floor(Math.random() * templates.length)];
+      console.log(` > Resonance Engine active. Injecting viral template -> "${template.name}"`);
+      draftPrompt += `\n\nCRITICAL FORMATTING OVERRIDE (ATLAS RESONANCE ENGINE):
+      Ignore any generic formatting advice. You MUST structure this post EXACTLY following this proven viral framework:
+      - Hook Psychology: ${template.hookArchetype}
+      - Pace & Tone: ${template.pacing}
+      - Structural Rhythm: ${template.formatStructure}
+      
+      Use this reconstructed example to understand the cadence and replicate it perfectly, but replace the content with our actual insight:
+      ${template.examples}`;
+    }
+
     // 4. Initial Draft Generation
     const { object: initialDraft } = await generateObject({
       model: provider(targetModel),
       schema: DraftSchema,
-      prompt: Prompts.GENERATE_DRAFT
-        .replace('{{hook}}', selectedHook)
-        .replace('{{insight}}', frameObj.insight),
+      prompt: draftPrompt,
     });
     console.log(` > Stage 4: Draft frameworks successfully synthesized.`);
 
@@ -144,7 +191,7 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
       console.log(` > Stage 6: Skipping rewrite (Quality is sufficient).`);
     }
 
-    // 6.5. Visual Image Attachment Strategy 2
+    // 6.5. Visual Image Attachment Strategy
     let finalMediaUrl: string | undefined = undefined;
     console.log(` > Stage 6.5: Acquring visual media for ${item.mode} mode...`);
     try {
@@ -156,22 +203,31 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
         finalMediaUrl = await generateImageWithFlux(imagePrompt);
         console.log(`   🎨 AI Image Generated via Fal.ai -> ${finalMediaUrl}`);
       } else {
-        // Information Mode
-        if (item.imageUrl) {
-          finalMediaUrl = item.imageUrl;
-          console.log(`   📸 Reusing ingested Publisher image -> ${finalMediaUrl}`);
-        } else {
-          console.log(`   🔍 No publisher image found. Searching Google for relevant logo...`);
-          const searchQuery = `${item.source} ${frameObj.insight.substring(0, 30)} logo high quality`;
-          const searched = await searchGoogleImages(searchQuery);
-          if (searched) {
-             finalMediaUrl = searched;
-             console.log(`   🌐 Found Search Image -> ${finalMediaUrl}`);
-          }
-        }
+        // Information Mode - Typography Plate
+        console.log(`   🔤 Distilling news into Typography Plate...`);
+        const { object: imageTextObj } = await generateObject({
+          model: provider(targetModel),
+          schema: ImageHeadlineSchema,
+          prompt: `Distill this news insight into a punchy, click-heavy 4 to 7 word headline to be printed on an image: ${frameObj.insight}`,
+        });
+        
+        const cleanHeadline = imageTextObj.headline.toUpperCase();
+        console.log(`   🔤 Distilled Headline: "${cleanHeadline}"`);
+
+        const imagePrompt = `A pristine, ultra-minimalist social media news plate graphic. Aesthetic: High-end B2B SaaS, deep obsidian dark-mode background with a subtle ambient glowing blue gradient. 
+        In the absolute center, crisp, large, elegant white sans-serif typography that reads exactly: "${cleanHeadline}". 
+        CRITICAL RULE: The text "${cleanHeadline}" must be central and spelled perfectly. No other text. Massive negative space. No abstract robots or messy elements. Sharp, corporate, futuristic perfection.`;
+        
+        finalMediaUrl = await generateImageWithFlux(imagePrompt);
+        console.log(`   🎨 AI Typography Plate Generated via Fal.ai -> ${finalMediaUrl}`);
       }
     } catch (mediaErr) {
        console.error(`   ⚠️ Failed to acquire visual media:`, mediaErr);
+       // Fallback completely if Flux crashes
+       if (item.mode === 'INFORMATION' && item.imageUrl) {
+         finalMediaUrl = item.imageUrl;
+         console.log(`   📸 Reverting to ingested Publisher image fallback -> ${finalMediaUrl}`);
+       }
     }
 
     // 7. Persist to Postgres

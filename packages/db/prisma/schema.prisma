@@ -75,3 +75,14 @@ model Transcript {
 
   createdAt          DateTime @default(now())
 }
+
+model PostTemplate {
+  id               String   @id @default(uuid())
+  name             String
+  hookArchetype    String   @db.Text
+  formatStructure  String   @db.Text
+  pacing           String   @db.Text
+  examples         String   @db.Text
+  
+  createdAt        DateTime @default(now())
+}

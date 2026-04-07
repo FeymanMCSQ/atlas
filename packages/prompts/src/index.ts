@@ -21,9 +21,13 @@ export const FounderPrompts = {
   EXTRACT_SIGNALS: `
     ${FOUNDER_PERSONA}
     
-    You are reading your own raw thoughts or experiences. Extract the core signals, facts, and themes from this dump. What is the emotional core here?
+    You are reading your own raw thoughts or experiences based on the topic: "{{title}}". 
+    Extract the core signals, facts, and themes from this dump that SPECIFICALLY RELATE to the topic. 
+    CRITICAL: Ignore any unrelated news, secondary articles, or sidebar text included in the dump. Only extract facts relevant to "{{title}}".
+    What is the emotional core here?
     Do not write a blog post. Output a structured list of key findings and contrarian arguments.
     
+    Topic: {{title}}
     Content:
     {{content}}
   `,
@@ -107,12 +111,17 @@ export const InformationPrompts = {
   EXTRACT_SIGNALS: `
     ${INFORMATION_PERSONA}
     
-    Extract the pure facts from the following news article. 
-    - Who is involved?
-    - What exactly happened or was released?
-    - What are the specific numbers, metrics, or quotes?
-    Do NOT abstract the news. Do not talk about general trends. Just list the raw facts.
+    Extract the pure facts from the following news article that SPECIFICALLY relate to this headline: "{{title}}"
     
+    CRITICAL RULES AVOIDING HALLUCINATION:
+    - Many scraped articles contain unrelated "Weekly Roundups", "Other News", or "Stock Summaries" at the bottom.
+    - YOU MUST COMPLETELY IGNORE any facts, companies, or numbers that do not directly pertain to the main headline ("{{title}}").
+    - Who is involved in the main headline?
+    - What exactly happened or was released?
+    - What are the specific numbers, metrics, or quotes regarding the main headline?
+    Do NOT abstract the news. Do not talk about general trends. Just list the raw facts about the single main story.
+    
+    Headline: {{title}}
     Content:
     {{content}}
   `,
@@ -169,9 +178,10 @@ export const InformationPrompts = {
     - List the ways with clean spacing.
     
     RULES for BOTH platforms:
-    1. NEVER use generic AI words (No "In today's fast-paced landscape", "Delve", "Navigate", "Tapestry").
-    2. Write like a human talking to another human in a Slack channel.
-    3. Make X very brief. Make LinkedIn slightly more conversational.
+    1. CRITICAL MANDATE: You MUST explicitly name the primary company or subject of the news event in the very first sentence. Never abstract the news away without stating exactly who was involved and what the headline states.
+    2. NEVER use generic AI words (No "In today's fast-paced landscape", "Delve", "Navigate", "Tapestry").
+    3. Write like a human talking to another human in a Slack channel.
+    4. Make X very brief. Make LinkedIn slightly more conversational.
     
     Hook: {{hook}}
     Insight: {{insight}}

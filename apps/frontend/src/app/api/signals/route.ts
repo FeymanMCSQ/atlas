@@ -9,7 +9,12 @@ export async function GET(request: Request) {
     const feedId = url.searchParams.get('feedId');
     
     // Default to a 20-item limit to prevent swamping the client
-    const whereClause = feedId ? { source: feedId } : {};
+    let whereClause = {};
+    if (feedId === 'TREND') {
+      whereClause = { source: { startsWith: '[Trend]' } };
+    } else if (feedId) {
+      whereClause = { source: feedId };
+    }
     
     const signals = await db.contentItem.findMany({
       where: whereClause,

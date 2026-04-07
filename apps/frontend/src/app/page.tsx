@@ -6,7 +6,7 @@ import styles from './page.module.css';
 // Type declarations mapping our internal domain
 type Feed = { id: string; name: string; url: string; isActive: boolean };
 type Signal = { id: string; source: string; title: string; url: string; summary: string; imageUrl?: string };
-type Draft = { id: string; contentItemId: string; platform: string; body: string; status: string };
+type Draft = { id: string; contentItemId: string; platform: string; body: string; status: string; mediaUrl?: string };
 
 export default function AtlasDashboard() {
   const [feeds, setFeeds] = useState<Feed[]>([]);
@@ -22,6 +22,11 @@ export default function AtlasDashboard() {
   
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState<string>('');
+  
+  // Article Viewer Modal State
+  const [readingSignal, setReadingSignal] = useState<Signal | null>(null);
+  const [articleMarkdown, setArticleMarkdown] = useState<string>('');
+  const [isArticleLoading, setIsArticleLoading] = useState<boolean>(false);
   
   // Track intervals per signal to avoid overlap in active polls
   const pollIntervals = useRef<Record<string, NodeJS.Timeout>>({});
@@ -154,6 +159,24 @@ export default function AtlasDashboard() {
     setEditBody('');
   };
 
+  const openArticleReader = async (signal: Signal) => {
+    setReadingSignal(signal);
+    setIsArticleLoading(true);
+    setArticleMarkdown('');
+    try {
+       const res = await fetch(`https://r.jina.ai/${signal.url}`);
+       if (res.ok) {
+         setArticleMarkdown(await res.text());
+       } else {
+         setArticleMarkdown(`⚠️ Failed to load article automatically (HTTP ${res.status}).\n\nPlease visit the source manually: ${signal.url}`);
+       }
+    } catch (e) {
+       setArticleMarkdown(`⚠️ Network error while attempting to load article.\n\nPlease visit the source manually: ${signal.url}`);
+    } finally {
+       setIsArticleLoading(false);
+    }
+  };
+
   return (
     <main className={styles.container}>
       <header className={styles.header}>
@@ -163,6 +186,11 @@ export default function AtlasDashboard() {
             <p className={styles.subtitle}>Autonomous B2B SaaS Content Generation Engine</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <a href="/resonance-lab" style={{textDecoration: 'none'}}>
+              <button className={styles.btnActionSecondary}>
+                Resonance Lab 🔬
+              </button>
+            </a>
             <select 
               className={styles.modeSelect} 
               style={{ margin: 0, padding: '0.5rem 1rem' }}
@@ -223,22 +251,31 @@ export default function AtlasDashboard() {
               <p className={styles.cardSummary}>{signal.summary}</p>
               
               {!drafts && (
-                 <div className={styles.cardActions}>
-                   <select
-                     className={styles.modeSelect}
-                     value={selectedMode[signal.id] || 'INFORMATION'}
-                     onChange={(e) => setSelectedMode(prev => ({ ...prev, [signal.id]: e.target.value }))}
-                     disabled={isProcessing}
-                   >
-                     <option value="INFORMATION">Information Mode</option>
-                     <option value="FOUNDER">Founder Mode</option>
-                   </select>
+                  <div className={styles.cardActions}>
+                   <div className={styles.actionGroup}>
+                     <select
+                       className={styles.modeSelect}
+                       value={selectedMode[signal.id] || 'INFORMATION'}
+                       onChange={(e) => setSelectedMode(prev => ({ ...prev, [signal.id]: e.target.value }))}
+                       disabled={isProcessing}
+                     >
+                       <option value="INFORMATION">Info Mode</option>
+                       <option value="FOUNDER">Founder Mode</option>
+                     </select>
+                     <button
+                       className={styles.btnActionSecondary}
+                       onClick={() => openArticleReader(signal)}
+                       title="View Source Text"
+                     >
+                       🌐 Read
+                     </button>
+                   </div>
                    <button 
                      className={styles.btnSynthesize} 
                      onClick={() => synthesizeSignal(signal.id, selectedMode[signal.id] || 'INFORMATION')}
                      disabled={isProcessing}
                    >
-                     {isProcessing ? '⚡ Generating AI Narrative...' : 'Synthesize Post ✨'}
+                     {isProcessing ? '⚡ Generating...' : 'Synthesize ✨'}
                    </button>
                  </div>
               )}
@@ -264,6 +301,16 @@ export default function AtlasDashboard() {
                          </div>
                        ) : (
                          <>
+                           {d.mediaUrl && (
+                             <div className={styles.draftMediaWrapper}>
+                               <img src={d.mediaUrl} alt="Attached Media" className={styles.draftMediaImage} />
+                               <div className={styles.draftMediaOverlay}>
+                                 <a href={d.mediaUrl} target="_blank" rel="noreferrer" download="atlas-visual.png" className={styles.btnActionSecondary}>
+                                   ⬇️ Download
+                                 </a>
+                               </div>
+                             </div>
+                           )}
                            <p className={styles.draftBody}>{d.body}</p>
                            <div className={styles.publishActions}>
                              <button 
@@ -305,6 +352,34 @@ export default function AtlasDashboard() {
           );
         })}
       </section>
+
+      {/* Deep-Web Article Viewer Modal */}
+      {readingSignal && (
+        <div className={styles.modalOverlay} onClick={() => setReadingSignal(null)}>
+          <div className={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle}>{readingSignal.title}</h2>
+              <button className={styles.modalClose} onClick={() => setReadingSignal(null)}>✕</button>
+            </div>
+            <div className={styles.modalBody}>
+              {isArticleLoading ? (
+                <div style={{ padding: '2rem', textAlign: 'center', opacity: 0.7 }}>
+                  <p>🕸️ Fetching raw deep-web markdown...</p>
+                </div>
+              ) : (
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontFamily: 'monospace', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                  {articleMarkdown}
+                </pre>
+              )}
+            </div>
+            <div className={styles.modalFooter}>
+               <a href={readingSignal.url} target="_blank" rel="noreferrer" className={styles.btnPublish}>
+                 Open Original URL
+               </a>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

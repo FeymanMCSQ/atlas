@@ -9,7 +9,14 @@ export async function GET() {
       where: { isActive: true },
       orderBy: { name: 'asc' },
     });
-    return NextResponse.json({ feeds });
+    
+    // Inject the synthetic autonomous trend engine tab
+    const allFeeds = [
+      { id: 'TREND', name: '🔥 AUTONOMOUS TRENDS', url: '', isActive: true },
+      ...feeds
+    ];
+
+    return NextResponse.json({ feeds: allFeeds });
   } catch (error) {
     console.error('[API] GET /feeds error:', error);
     return NextResponse.json({ error: 'Failed to fetch feeds' }, { status: 500 });

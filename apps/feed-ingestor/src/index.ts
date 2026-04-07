@@ -13,6 +13,7 @@ import * as cheerio from "cheerio";
 import { db } from "@atlas/db";
 import { emitEvent, closeQueue } from "@atlas/queue";
 import { EventTypes, ContentIngestedPayload } from "@atlas/domain";
+import { discoverTrendingNews } from "./discovery.js";
 
 // ---------------------------------------------------------------------------
 // Canonical feed list — this is the SINGLE source of truth.
@@ -211,6 +212,9 @@ async function processFeeds(): Promise<void> {
       console.error(`[Feed Ingestor] ❌ ${source.name}: ${err.message || err}`);
     }
   }
+
+  // ---- Step 3: AI Trend Discovery Engine ----
+  await discoverTrendingNews();
 
   console.log(`\n[Feed Ingestor] Polling cycle complete.`);
 }

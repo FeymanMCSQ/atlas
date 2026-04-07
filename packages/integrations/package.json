@@ -4,6 +4,13 @@
   "private": true,
   "description": "External API adapters",
   "main": "src/index.ts",
+  "exports": {
+    "./src/serper-client.js": "./src/serper-client.ts",
+    "./src/fal-client.js": "./src/fal-client.ts",
+    "./src/linkedin-client.js": "./src/linkedin-client.ts",
+    "./src/linkedin-media.js": "./src/linkedin-media.ts",
+    "./src/x-client.js": "./src/x-client.ts"
+  },
   "scripts": {},
   "dependencies": {
     "twitter-api-v2": "^1.29.0"
