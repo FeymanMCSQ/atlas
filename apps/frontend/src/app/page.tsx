@@ -186,6 +186,11 @@ export default function AtlasDashboard() {
             <p className={styles.subtitle}>Autonomous B2B SaaS Content Generation Engine</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <a href="/finance" style={{textDecoration: 'none'}}>
+              <button className={styles.btnActionSecondary}>
+                Financial Control Center 💳
+              </button>
+            </a>
             <a href="/resonance-lab" style={{textDecoration: 'none'}}>
               <button className={styles.btnActionSecondary}>
                 Resonance Lab 🔬

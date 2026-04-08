@@ -76,8 +76,10 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
     // Basic fallback for other sources like RSS or ingestions
     rawContent = item.summary || JSON.stringify(item.sourceData);
 
-    // Deep Web Information Mode Scraper (Jina Reader)
-    if ((item.mode === 'INFORMATION' || item.source.startsWith('[Trend]')) && item.url) {
+    // Deep Web Scraper (Jina Reader) — applies to ALL modes with a URL.
+    // Previously this was INFORMATION-only, but Founder mode articles from RSS 
+    // also have near-empty summaries (esp. HN), causing hallucination from sparse content.
+    if (item.url && item.url.startsWith('http')) {
       console.log(`\n[Content Brain] 🕸️ Invoking Deep Scraper via Jina Reader: ${item.url}`);
       try {
         const jinaRes = await fetch(`https://r.jina.ai/${item.url}`, {
@@ -148,13 +150,20 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
       const template = templates[Math.floor(Math.random() * templates.length)];
       console.log(` > Resonance Engine active. Injecting viral template -> "${template.name}"`);
       draftPrompt += `\n\nCRITICAL FORMATTING OVERRIDE (ATLAS RESONANCE ENGINE):
-      Ignore any generic formatting advice. You MUST structure this post EXACTLY following this proven viral framework:
-      - Hook Psychology: ${template.hookArchetype}
+      You have been given a proven viral formatting framework. This is a STRUCTURAL GUIDE ONLY.
+      
+      ⚠️ WARNING: The example below is from a COMPLETELY DIFFERENT TOPIC. DO NOT reference, repeat, or borrow any subject matter from the example. ONLY extract the formatting rhythm and structural pattern.
+
+      The framework you MUST apply to YOUR actual insight is:
+      - Hook Style: ${template.hookArchetype}
       - Pace & Tone: ${template.pacing}
       - Structural Rhythm: ${template.formatStructure}
       
-      Use this reconstructed example to understand the cadence and replicate it perfectly, but replace the content with our actual insight:
-      ${template.examples}`;
+      === STRUCTURE REFERENCE ONLY (ignore the topic entirely, use only the paragraph rhythm) ===
+      ${template.examples}
+      === END STRUCTURE REFERENCE ===
+      
+      Now write your post about the insight above using only the structural pattern from the example. Your post MUST be 100% about the actual insight provided, not about anything in the example.`;
     }
 
     // 4. Initial Draft Generation

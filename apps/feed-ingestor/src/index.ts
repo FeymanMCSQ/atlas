@@ -219,15 +219,43 @@ async function processFeeds(): Promise<void> {
   console.log(`\n[Feed Ingestor] Polling cycle complete.`);
 }
 
-async function startWorker() {
+import cron from 'node-cron';
+import { executeSurveillancePipeline } from './surveillance.js';
+
+async function runIngestionCycle() {
   try {
     await processFeeds();
+    // Intentionally omitting closeQueue so the connection stays alive 
+    // for future cron cycles.
   } catch (error) {
-    console.error(`[Feed Ingestor] Fatal system fault:`, error);
-  } finally {
-    await closeQueue(EventTypes.CONTENT_INGESTED);
-    process.exit(0);
+    console.error(`[Feed Ingestor] System fault during cycle:`, error);
   }
 }
 
-startWorker();
+async function startDaemon() {
+  console.log(`[Atlas Daemon] Booting up background workers...`);
+  
+  // 1. Run an immediate ingestion cycle on startup
+  await runIngestionCycle();
+
+  // 2. Schedule standard news feed ingestion (Hourly)
+  cron.schedule('0 * * * *', async () => {
+    console.log(`[Atlas Daemon] ⏰ Triggering hourly feed ingestion...`);
+    await runIngestionCycle();
+  });
+
+  // 3. Schedule the Surveillance Engine (Midnight EST)
+  // '0 0 * * *' triggers at exactly 12:00 AM every day
+  cron.schedule('0 0 * * *', async () => {
+    console.log(`[Atlas Daemon] ⏰ Triggering Midnight Competitor Surveillance...`);
+    try {
+      await executeSurveillancePipeline();
+    } catch (e) {
+      console.error(`[Surveillance Engine] Failed:`, e);
+    }
+  });
+
+  console.log(`[Atlas Daemon] Workers successfully scheduled. System will remain active.`);
+}
+
+startDaemon();

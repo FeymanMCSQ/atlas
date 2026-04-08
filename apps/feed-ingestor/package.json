@@ -8,14 +8,18 @@
     "build": "tsc"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.41",
     "@atlas/db": "workspace:*",
     "@atlas/domain": "workspace:*",
-    "@atlas/queue": "workspace:*",
     "@atlas/prompts": "workspace:*",
-    "@ai-sdk/openai": "^3.0.41",
+    "@atlas/queue": "workspace:*",
     "ai": "^6.0.116",
-    "zod": "^4.3.6",
     "cheerio": "^1.2.0",
-    "rss-parser": "^3.13.0"
+    "node-cron": "^4.2.1",
+    "rss-parser": "^3.13.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node-cron": "^3.0.11"
   }
 }

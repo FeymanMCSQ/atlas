@@ -1,0 +1,155 @@
+.container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+}
+
+.main {
+  flex: 1;
+  padding: 4rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 4rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  max-width: 1000px;
+}
+
+.btnLaunch {
+  background: var(--text-primary);
+  color: var(--bg-color);
+  border: none;
+  font-family: inherit;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btnLaunch:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.modulesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+}
+
+.apiCard {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--glass-border);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.vendorName {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.costBadge {
+  background: rgba(255, 50, 50, 0.1);
+  color: #ff3232;
+  border: 1px solid rgba(255, 50, 50, 0.3);
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.costBadgeMed {
+  background: rgba(255, 165, 0, 0.1);
+  color: #ffa500;
+  border: 1px solid rgba(255, 165, 0, 0.3);
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.costBadgeLow {
+  background: rgba(0, 150, 255, 0.1);
+  color: #0096ff;
+  border: 1px solid rgba(0, 150, 255, 0.3);
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.costBadgeFree {
+  background: rgba(0, 255, 100, 0.1);
+  color: #00ff64;
+  border: 1px solid rgba(0, 255, 100, 0.3);
+  padding: 0.3rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.vendorDesc {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: 2rem;
+  line-height: 1.5;
+}
+
+.dependencyList {
+  flex: 1;
+  list-style-type: none;
+  padding: 0;
+  margin-bottom: 2rem;
+}
+
+.dependencyList li {
+  background: rgba(255, 255, 255, 0.02);
+  margin-bottom: 0.5rem;
+  padding: 1rem;
+  border-left: 2px solid var(--text-secondary);
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+.linkButton {
+  display: block;
+  text-align: center;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--text-primary);
+  padding: 0.8rem;
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.linkButton:hover {
+  background: var(--text-primary);
+  color: var(--bg-color);
+}

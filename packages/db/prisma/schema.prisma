@@ -86,3 +86,25 @@ model PostTemplate {
   
   createdAt        DateTime @default(now())
 }
+
+model SurveillanceTarget {
+  id               String   @id @default(uuid())
+  platform         String   // "linkedin" | "x"
+  handle           String   @unique
+  baselineAverage  Float    @default(0)
+  postCount        Int      @default(0)
+
+  createdAt        DateTime @default(now())
+}
+
+model ObservedPost {
+  id               String   @id @default(uuid())
+  targetId         String
+  url              String   @unique
+  content          String   @db.Text
+  likes            Int
+  comments         Int
+  zScore           Float?
+
+  createdAt        DateTime @default(now())
+}
