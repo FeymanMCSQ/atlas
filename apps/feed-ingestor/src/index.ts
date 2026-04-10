@@ -20,6 +20,9 @@ import { discoverTrendingNews } from "./discovery.js";
 // If a URL is not in this list, it gets deactivated in the database.
 // ---------------------------------------------------------------------------
 const CORE_FEEDS = [
+  // -----------------------------------------------------------------------
+  // Tech News & Engineering (Information Mode)
+  // -----------------------------------------------------------------------
   { name: 'Netflix TechBlog', url: 'https://netflixtechblog.com/feed' },
   { name: 'CNCF Blog', url: 'https://www.cncf.io/blog/feed/' },
   { name: 'Uber Engineering', url: 'https://www.uber.com/en-US/blog/engineering/rss/' },
@@ -39,6 +42,20 @@ const CORE_FEEDS = [
   { name: 'DigitalOcean Blog', url: 'https://www.digitalocean.com/blog/rss/' },
   { name: 'PostHog', url: 'https://posthog.com/rss.xml' },
   { name: 'HashiCorp Blog', url: 'https://www.hashicorp.com/blog/feed.xml' },
+
+  // -----------------------------------------------------------------------
+  // Founder Journeys & Lessons (Founder Mode Fuel)
+  // High-density personal essays, bootstrapper stories & entrepreneurship insights.
+  // Infrequent cadence but rich content — ideal for Founder Mode synthesis.
+  // -----------------------------------------------------------------------
+  { name: 'Justin Jackson (Transistor)', url: 'https://justinjackson.ca/feed' },
+  { name: 'Pieter Levels (Nomad List)', url: 'https://levels.io/feed/' },
+  { name: 'Seth Godin', url: 'https://seths.blog/feed/' },
+  { name: 'Nathan Barry (ConvertKit)', url: 'https://nathanbarry.com/feed/' },
+  { name: 'A Smart Bear (Jason Cohen)', url: 'https://blog.asmartbear.com/feed/' },
+  { name: 'Startups For the Rest of Us', url: 'https://www.startupsfortherestofus.com/feed' },
+  { name: 'Indie Hackers', url: 'https://www.indiehackers.com/feed' },
+  { name: 'Nate Liason', url: 'https://blog.nateliason.com/feed' },
 ];
 
 // ---------------------------------------------------------------------------
