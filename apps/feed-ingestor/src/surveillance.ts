@@ -100,7 +100,8 @@ export async function executeSurveillancePipeline() {
 
         try {
           // Send it directly to our internal Resonance API to reverse engineer
-          const req = await fetch('http://localhost:3000/api/resonance', {
+          const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+          const req = await fetch(`${baseUrl}/api/resonance`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ viralPostText: post.text })
