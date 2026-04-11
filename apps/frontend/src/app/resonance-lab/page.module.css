@@ -166,3 +166,129 @@
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── X-Factor Hunt Report Section ── */
+.reportSection {
+  border-top: 1px solid var(--glass-border);
+  padding-top: 3rem;
+}
+
+.reportTitle {
+  font-size: 1.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+}
+
+.reportSubtitle {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  max-width: 800px;
+  margin-bottom: 2rem;
+}
+
+.emptyReport {
+  background: rgba(255,255,255,0.03);
+  border: 1px dashed var(--glass-border);
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.reportList {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.reportCard {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--glass-border);
+  padding: 2rem;
+}
+
+.reportCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 1rem;
+}
+
+.reportDate {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+}
+
+.reportStats {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.reportItems {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.reportItem {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  background: rgba(255,255,255,0.02);
+  border-left: 3px solid var(--glass-border);
+}
+
+.reportItemInjected {
+  border-left-color: #00ff64;
+}
+
+.reportItemScore {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 60px;
+}
+
+.injectedBadge {
+  font-size: 0.65rem;
+  font-weight: bold;
+  color: #00ff64;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.reportItemBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.reportItemUrl {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.reportItemUrl:hover {
+  text-decoration: underline;
+}
+
+.reportItemHook {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.reportItemWhy {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+}

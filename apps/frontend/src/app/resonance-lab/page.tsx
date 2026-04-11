@@ -1,12 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './page.module.css';
 
 export default function ResonanceLab() {
   const [viralText, setViralText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastTemplate, setLastTemplate] = useState<any>(null);
+  const [reports, setReports] = useState<any[]>([]);
+  const [loadingReports, setLoadingReports] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/resonance/report')
+      .then(r => r.json())
+      .then(data => { if (data.success) setReports(data.reports); })
+      .catch(() => {})
+      .finally(() => setLoadingReports(false));
+  }, []);
 
   const handleDeconstruct = async () => {
     if (!viralText || viralText.length < 20) return;
@@ -44,7 +54,7 @@ export default function ResonanceLab() {
               </a>
             </div>
             <p className={styles.subtitle}>
-              Reverse-engineer viral social media psychology. Paste a highly-successful post from X or LinkedIn below. Claude-3-Opus will extract the psychological hook, pacing, and formatting structure, permanently saving it for Atlas Content Brain to mimic.
+              Reverse-engineer viral social media psychology. Paste a highly-successful post from X or LinkedIn below. Claude-Opus-4.6 will extract the psychological hook, pacing, and formatting structure, permanently saving it for Atlas Content Brain to mimic.
             </p>
         </div>
 
@@ -94,10 +104,65 @@ export default function ResonanceLab() {
                 </div>
                 
                 <div className={styles.successMessage}>
-                    This generic template has been securely injected into the PostgreSQL <code>PostTemplate</code> database. Atlas Content Brain will now randomly clone this format when synthesizing future news. You successfully stole their strategy without learning marketing!
+                    This generic template has been securely injected into the PostgreSQL <code>PostTemplate</code> database. Atlas Content Brain will now randomly clone this format when synthesizing future news.
                 </div>
               </div>
             )}
+
+            {/* ── Automated Daily Hunt Reports ── */}
+            <div className={styles.reportSection}>
+              <h2 className={styles.reportTitle}>🎯 Automated X-Factor Hunt — Daily Reports</h2>
+              <p className={styles.reportSubtitle}>
+                Every day at 6 AM, Atlas autonomously searches Google for structurally-excellent LinkedIn posts, 
+                scores each one with Claude-Opus-4.6 on Hook Strength, Reach Independence, and Engagement Architecture, 
+                then injects qualifying posts (score ≥ 7.5/10) into the Resonance Engine.
+              </p>
+
+              {loadingReports ? (
+                <p style={{ color: 'var(--text-secondary)', padding: '2rem 0' }}>Loading reports...</p>
+              ) : reports.length === 0 ? (
+                <div className={styles.emptyReport}>
+                  <p>⏳ No hunt reports yet. The first X-Factor Hunt runs at 6 AM EST tomorrow.</p>
+                  <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', opacity: 0.6 }}>
+                    You can also trigger a manual test run from the backend logs.
+                  </p>
+                </div>
+              ) : (
+                <div className={styles.reportList}>
+                  {reports.map((report) => {
+                    const items = report.reportItems as any[];
+                    const injected = items.filter((i: any) => i.injected);
+                    return (
+                      <div key={report.id} className={styles.reportCard}>
+                        <div className={styles.reportCardHeader}>
+                          <span className={styles.reportDate}>📅 {report.date}</span>
+                          <span className={styles.reportStats}>
+                            {report.postsAnalyzed} analyzed → <strong>{report.postsInjected} injected</strong>
+                          </span>
+                        </div>
+                        <div className={styles.reportItems}>
+                          {items.map((item: any, idx: number) => (
+                            <div key={idx} className={`${styles.reportItem} ${item.injected ? styles.reportItemInjected : ''}`}>
+                              <div className={styles.reportItemScore}>
+                                <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{item.score}/10</span>
+                                {item.injected && <span className={styles.injectedBadge}>✅ INJECTED</span>}
+                              </div>
+                              <div className={styles.reportItemBody}>
+                                <a href={item.url} target="_blank" rel="noreferrer" className={styles.reportItemUrl}>
+                                  {item.title || item.url}
+                                </a>
+                                <p className={styles.reportItemHook}>Hook: <em>{item.hookArchetype}</em></p>
+                                <p className={styles.reportItemWhy}>{item.whyItHelps}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
         </div>
       </main>
     </div>

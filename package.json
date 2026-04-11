@@ -15,7 +15,7 @@
     "clean:dev": "pgrep -f 'tsx.*src/index.ts' | xargs -r kill -9 || echo 'No orphaned workers found'"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "packageManager": "pnpm@9.0.0",
   "devDependencies": {
