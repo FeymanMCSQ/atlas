@@ -34,13 +34,17 @@ export async function handlePublishRequested(
   const { draftId, platform } = payload;
 
   // ─── 0. Auto-publish killswitch ──────────────────────────────────────
-  // Set DISABLE_AUTO_PUBLISH=true in Railway/Vercel env to prevent any
-  // autonomous posting. All publishing must be triggered manually via the UI.
-  if (process.env.DISABLE_AUTO_PUBLISH === 'true') {
-    console.log(`📢 [Publisher] 🔒 DISABLE_AUTO_PUBLISH=true — auto-posting is disabled. Skipping draft ${draftId}.`);
+  // Set DISABLE_AUTO_PUBLISH=true in Railway env to block any automated
+  // publishing. Manual publishes (user clicking Publish in the UI) always
+  // pass through via isManual:true regardless of this setting.
+  if (process.env.DISABLE_AUTO_PUBLISH === 'true' && !payload.isManual) {
+    console.log(`📢 [Publisher] 🔒 DISABLE_AUTO_PUBLISH=true — blocking automated publish of draft ${draftId}.`);
     return;
   }
 
+  if (payload.isManual) {
+    console.log(`📢 [Publisher] 👤 Manual publish triggered by user — proceeding regardless of killswitch.`);
+  }
 
   console.log(`\n📢 [Publisher] Step 1: Checking if draft ${draftId} is officially approved for publishing...`);
   const claimResult = await db.draft.updateMany({

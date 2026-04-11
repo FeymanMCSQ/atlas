@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     const payload: ContentPublishRequestedPayload = {
       draftId,
       platform,
+      isManual: true, // User clicked Publish — bypass DISABLE_AUTO_PUBLISH killswitch
     };
     
     // Fire the publish request into the background pipeline Orchestrator

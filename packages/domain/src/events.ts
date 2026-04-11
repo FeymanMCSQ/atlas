@@ -88,6 +88,7 @@ export interface ContentApprovedPayload {
 export interface ContentPublishRequestedPayload {
   draftId: string;
   platform: string;
+  isManual?: boolean; // true = triggered by user clicking Publish in the UI
 }
 
 export interface ContentPublishedPayload {
