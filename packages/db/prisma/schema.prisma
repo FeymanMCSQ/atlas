@@ -108,3 +108,13 @@ model ObservedPost {
 
   createdAt        DateTime @default(now())
 }
+
+model ResonanceReport {
+  id              String   @id @default(uuid())
+  date            String   @unique // YYYY-MM-DD
+  postsAnalyzed   Int      @default(0)
+  postsInjected   Int      @default(0)
+  reportItems     Json     // Array of { url, score, hookArchetype, whyItHelps }
+
+  createdAt       DateTime @default(now())
+}
