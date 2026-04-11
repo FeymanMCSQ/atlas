@@ -33,7 +33,15 @@ export async function handlePublishRequested(
 ): Promise<void> {
   const { draftId, platform } = payload;
 
-  // ─── 1. Atomic claim (Duplicate Protection) ─────────────────────────
+  // ─── 0. Auto-publish killswitch ──────────────────────────────────────
+  // Set DISABLE_AUTO_PUBLISH=true in Railway/Vercel env to prevent any
+  // autonomous posting. All publishing must be triggered manually via the UI.
+  if (process.env.DISABLE_AUTO_PUBLISH === 'true') {
+    console.log(`📢 [Publisher] 🔒 DISABLE_AUTO_PUBLISH=true — auto-posting is disabled. Skipping draft ${draftId}.`);
+    return;
+  }
+
+
   console.log(`\n📢 [Publisher] Step 1: Checking if draft ${draftId} is officially approved for publishing...`);
   const claimResult = await db.draft.updateMany({
     where: { 
