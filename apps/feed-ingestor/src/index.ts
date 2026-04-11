@@ -238,6 +238,7 @@ async function processFeeds(): Promise<void> {
 
 import cron from 'node-cron';
 import { executeSurveillancePipeline } from './surveillance.js';
+import { runXFactorHunt } from './xfactor-hunter.js';
 
 async function runIngestionCycle() {
   try {
@@ -261,14 +262,26 @@ async function startDaemon() {
     await runIngestionCycle();
   });
 
-  // 3. Schedule the Surveillance Engine (Midnight EST)
-  // '0 0 * * *' triggers at exactly 12:00 AM every day
+  // 3. Schedule the Z-Score Surveillance Engine (Midnight EST)
   cron.schedule('0 0 * * *', async () => {
     console.log(`[Atlas Daemon] ⏰ Triggering Midnight Competitor Surveillance...`);
     try {
       await executeSurveillancePipeline();
     } catch (e) {
       console.error(`[Surveillance Engine] Failed:`, e);
+    }
+  });
+
+  // 4. Schedule the X-Factor Resonance Hunter (6 AM EST daily)
+  //    Searches Google for structurally-excellent LinkedIn posts,
+  //    scores them with Claude-Opus-4.6, injects qualifying posts
+  //    into the Resonance Engine's PostTemplate database.
+  cron.schedule('0 6 * * *', async () => {
+    console.log(`[Atlas Daemon] ⏰ Triggering X-Factor Resonance Hunt...`);
+    try {
+      await runXFactorHunt();
+    } catch (e) {
+      console.error(`[X-Factor Hunter] Failed:`, e);
     }
   });
 
