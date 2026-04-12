@@ -104,14 +104,42 @@ export default function AtlasDashboard() {
   const synthesizeSignal = async (signalId: string, mode: string) => {
     setProcessing(prev => ({ ...prev, [signalId]: true }));
     
-    // 1. Fire the emission request
-    await fetch('/api/synthesize', {
-      method: 'POST',
-      body: JSON.stringify({ contentItemId: signalId, mode, model: selectedAIModel }),
-    });
+    try {
+      // 1. Fire the emission request
+      const res = await fetch('/api/synthesize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contentItemId: signalId, mode, model: selectedAIModel }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[Atlas] Synthesis request failed:', err);
+        alert(`Synthesis failed: ${err.error || res.statusText}`);
+        setProcessing(prev => ({ ...prev, [signalId]: false }));
+        return;
+      }
+    } catch (fetchErr) {
+      console.error('[Atlas] Network error calling /api/synthesize:', fetchErr);
+      alert('Network error — could not reach the synthesis endpoint. Check your connection.');
+      setProcessing(prev => ({ ...prev, [signalId]: false }));
+      return;
+    }
 
     // 2. Begin rigorous polling mechanism 
+    let pollCount = 0;
+    const MAX_POLLS = 36; // 3 minutes max (36 × 5s)
+
     const interval = setInterval(async () => {
+      pollCount++;
+
+      if (pollCount > MAX_POLLS) {
+        clearInterval(interval);
+        setProcessing(prev => ({ ...prev, [signalId]: false }));
+        alert('Generation timed out after 3 minutes. The backend may be overloaded — try again.');
+        return;
+      }
+
       const res = await fetch(`/api/drafts?contentItemId=${signalId}`);
       const data = await res.json();
       
