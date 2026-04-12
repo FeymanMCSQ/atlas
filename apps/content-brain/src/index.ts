@@ -53,9 +53,48 @@ const EvalSchema = z.object({
   flaws: z.array(z.string()).describe("A list of explicit flaws referencing the negative tone/structure traits.")
 });
 
-const ImageHeadlineSchema = z.object({
   headline: z.string().describe("A hyper-condensed 4 to 7 word news headline representing the core insight.")
 });
+
+/**
+ * Smart Structural Matcher
+ * Analyzes the news item and available templates to find the most resonant structural fit.
+ */
+async function selectBestTemplate(insight: string, templates: any[], manualTemplateId?: string, model?: string) {
+  if (manualTemplateId) {
+    const manual = templates.find(t => t.id === manualTemplateId);
+    if (manual) return manual;
+  }
+
+  if (templates.length === 0) return null;
+  if (templates.length === 1) return templates[0];
+
+  console.log(`[Resonance Circuit] 🧠 Intelligently matching structure to insight...`);
+  try {
+    const { object: selection } = await generateObject({
+      model: provider(model || DEFAULT_MODEL),
+      schema: z.object({
+        bestTemplateId: z.string().describe("The ID of the template that best fits the emotional/structural vibe of the news.")
+      }),
+      prompt: `
+        You are a Structural Resonance Expert.
+        
+        Insight to map: "${insight}"
+        
+        Available Viral Structures:
+        ${templates.map(t => `- [${t.id}] ${t.name}: ${t.hookArchetype}`).join('\n')}
+        
+        Which of these templates provides the most appropriate "vibe" for this insight? 
+        Select the ID of the best fit.
+      `
+    });
+    return templates.find(t => t.id === selection.bestTemplateId) || templates[0];
+  } catch (err) {
+    console.warn(`[Resonance Circuit] Smart mapping failed, falling back to top selection.`);
+    return templates[0];
+  }
+}
+
 
 async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
   try {
@@ -143,18 +182,25 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
       .replace('{{insight}}', frameObj.insight);
 
     // [STEP 2] Check availability and select 
-    console.log(`[Resonance Circuit] Step 2: Evaluating template availability...`);
-    if (templates.length > 0) {
-      const template = templates[Math.floor(Math.random() * templates.length)];
-      console.log(`[Resonance Circuit] Step 2 Complete -> Selected "${template.name}"`);
+    console.log(`[Resonance Circuit] Step 2: Evaluating template mapping...`);
+    const template = await selectBestTemplate(
+        frameObj.insight, 
+        templates, 
+        payload.templateId, 
+        targetModel
+    );
+
+    if (template) {
+      console.log(`[Resonance Circuit] Step 2 Complete -> Selected Structure: "${template.name}"`);
       
       // [STEP 3] Inject critical formatting override
       console.log(`[Resonance Circuit] Step 3: Injecting formatting override into system prompt...`);
       draftPrompt += `\n\nCRITICAL FORMATTING OVERRIDE (ATLAS RESONANCE ENGINE):\n${template.formatStructure}\n\n Pace: ${template.pacing}`;
       console.log(`[Resonance Circuit] Step 3 Complete -> Injection string appended successfully.`);
     } else {
-      console.log(`[Resonance Circuit] Step 2/3 Result -> No templates in DB. Bypassing engine.`);
+      console.log(`[Resonance Circuit] Step 2/3 Result -> No templates available. Bypassing engine.`);
     }
+
 
 
     // --- STAGE 4: DRAFT ---
