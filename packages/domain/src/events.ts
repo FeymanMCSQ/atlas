@@ -40,7 +40,11 @@ export const EventTypes = {
 
   /** Emitted by Publisher when publishing fails */
   CONTENT_PUBLISH_FAILED: "content.publish_failed",
+
+  /** Emitted by Frontend to trigger a manual Resonance Engine hunt */
+  RESONANCE_HUNT_REQUESTED: "resonance.hunt_requested",
 } as const;
+
 
 export type EventType = (typeof EventTypes)[keyof typeof EventTypes];
 
@@ -120,7 +124,9 @@ export interface EventPayloadMap {
   [EventTypes.CONTENT_PUBLISH_REQUESTED]: ContentPublishRequestedPayload;
   [EventTypes.CONTENT_PUBLISHED]: ContentPublishedPayload;
   [EventTypes.CONTENT_PUBLISH_FAILED]: ContentPublishFailedPayload;
+  [EventTypes.RESONANCE_HUNT_REQUESTED]: {};
 }
+
 
 // ─── Event Envelope ──────────────────────────────────────────────────
 

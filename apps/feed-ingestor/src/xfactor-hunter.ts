@@ -34,31 +34,40 @@ async function searchLinkedInPosts(query: string): Promise<{ url: string; title:
       headers: { 'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json' },
       body: JSON.stringify({ q: query, num: 5 })
     });
-    if (!response.ok) return [];
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[X-Factor Hunter] Serper API error (${response.status}): ${errorText}`);
+        return [];
+    }
     const data = await response.json();
     return (data.organic || [])
       .filter((r: any) => r.link && r.link.includes('linkedin.com'))
       .map((r: any) => ({ url: r.link, title: r.title || '', snippet: r.snippet || '' }));
   } catch (e: any) {
-    console.warn(`[X-Factor Hunter] Search error: ${e.message}`);
+    console.error(`[X-Factor Hunter] Search error: ${e.message}`);
     return [];
   }
 }
+
 
 async function fetchPostContent(url: string): Promise<string> {
   try {
     const res = await fetch(`https://r.jina.ai/${url}`, {
       signal: AbortSignal.timeout(12000)
     });
-    if (!res.ok) return '';
+    if (!res.ok) {
+        console.warn(`[X-Factor Hunter] Jina fetch failed for ${url}: HTTP ${res.status}`);
+        return '';
+    }
     const text = await res.text();
     // Cap at 3000 chars to keep Claude scoring fast
     return text.substring(0, 3000);
   } catch (e: any) {
-    console.warn(`[X-Factor Hunter] Jina fetch failed for ${url}: ${e.message}`);
+    console.warn(`[X-Factor Hunter] Jina fetch error for ${url}: ${e.message}`);
     return '';
   }
 }
+
 
 async function scorePostWithClaude(postText: string, url: string): Promise<{ score: number; hookArchetype: string; whyItHelps: string } | null> {
   const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
@@ -101,16 +110,24 @@ Respond ONLY as JSON with this exact structure:
       })
     });
 
-    if (!response.ok) return null;
+    if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[X-Factor Hunter] Claude API error (${response.status}): ${errorText}`);
+        return null;
+    }
     const data = await response.json();
     const raw = data.choices?.[0]?.message?.content;
-    if (!raw) return null;
+    if (!raw) {
+        console.error(`[X-Factor Hunter] Claude returned empty response`);
+        return null;
+    }
     return JSON.parse(raw);
   } catch (e: any) {
-    console.warn(`[X-Factor Hunter] Claude scoring failed: ${e.message}`);
+    console.error(`[X-Factor Hunter] Claude scoring exception: ${e.message}`);
     return null;
   }
 }
+
 
 async function injectIntoResonanceEngine(postText: string): Promise<{ name: string } | null> {
   try {
@@ -136,12 +153,12 @@ export async function runXFactorHunt() {
 
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
-  // Check if already ran today (TEMPORARILY DISABLED FOR TESTING)
+  // Check if already ran today
   const existing = await db.resonanceReport.findUnique({ where: { date: today } });
   if (existing) {
-    console.log(`[X-Factor Hunter] Already ran today (${today}). OVERRIDING AND RUNNING ANYWAY FOR TESTING.`);
-    // return;
+    console.log(`[X-Factor Hunter] Daily report already exists for ${today}. This run will update the existing record.`);
   }
+
 
 
   // Pick 3 random queries from our pool (to avoid burning all Serper credits daily)
@@ -206,9 +223,15 @@ export async function runXFactorHunt() {
     reportItems.push(reportItem);
   }
 
-  // Save report to database
-  await db.resonanceReport.create({
-    data: {
+  // Upsert report to database (prevent duplicate key crashes)
+  await db.resonanceReport.upsert({
+    where: { date: today },
+    update: {
+      postsAnalyzed: reportItems.length,
+      postsInjected: injectedCount,
+      reportItems
+    },
+    create: {
       date: today,
       postsAnalyzed: reportItems.length,
       postsInjected: injectedCount,

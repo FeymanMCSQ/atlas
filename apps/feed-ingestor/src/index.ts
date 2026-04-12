@@ -11,8 +11,9 @@ import https from "https";
 import http from "http";
 import * as cheerio from "cheerio";
 import { db } from "@atlas/db";
-import { emitEvent, closeQueue } from "@atlas/queue";
-import { EventTypes, ContentIngestedPayload } from "@atlas/domain";
+import { emitEvent, closeQueue, createEventWorker } from "@atlas/queue";
+import { EventTypes, ContentIngestedPayload, AtlasEvent } from "@atlas/domain";
+
 import { discoverTrendingNews } from "./discovery.js";
 
 // ---------------------------------------------------------------------------
@@ -256,8 +257,6 @@ async function startDaemon() {
   // 1. Run an immediate ingestion cycle on startup
   await runIngestionCycle();
 
-  console.log(`[Atlas Daemon] ⏰ Running ONE-TIME X-Factor Hunt for testing...`);
-  await runXFactorHunt();
 
   // 2. Schedule standard news feed ingestion (Hourly)
   cron.schedule('0 * * * *', async () => {
@@ -275,10 +274,6 @@ async function startDaemon() {
     }
   });
 
-  // 4. Schedule the X-Factor Resonance Hunter (6 AM EST daily)
-  //    Searches Google for structurally-excellent LinkedIn posts,
-  //    scores them with Claude-Opus-4.6, injects qualifying posts
-  //    into the Resonance Engine's PostTemplate database.
   cron.schedule('0 6 * * *', async () => {
     console.log(`[Atlas Daemon] ⏰ Triggering X-Factor Resonance Hunt...`);
     try {
@@ -288,7 +283,20 @@ async function startDaemon() {
     }
   });
 
+  /**
+   * 5. Listen for Manual Resonance Hunt Requests
+   */
+  createEventWorker(EventTypes.RESONANCE_HUNT_REQUESTED, async (event: AtlasEvent) => {
+    console.log(`[Atlas Daemon] 📥 Manual Resonance Hunt Triggered!`);
+    try {
+      await runXFactorHunt();
+    } catch (e) {
+      console.error(`[X-Factor Hunter] Manual Hunt Failed:`, e);
+    }
+  });
+
   console.log(`[Atlas Daemon] Workers successfully scheduled. System will remain active.`);
+
 }
 
 startDaemon();

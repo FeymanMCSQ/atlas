@@ -43,29 +43,24 @@ export default function ResonanceLab() {
     }
   };
 
-  const handleTestCircuit = async () => {
+  const handleRunResonance = async () => {
     setIsProcessing(true);
     try {
-      const res = await fetch('/api/resonance/test');
+      const res = await fetch('/api/resonance/run', { method: 'POST' });
       const data = await res.json();
       if (data.error) {
-        alert(`Circuit Failed: ${data.details}`);
+        alert(`Hunt Failed: ${data.details}`);
       } else {
-        console.log("Resonance Circuit Result:", data.steps);
-        const latestStep = data.steps[data.steps.length - 1];
-        if (latestStep.status === 'SKIPPED_EMPTY_DB') {
-          alert('Circuit Test Complete:\n\nStep 1: 0 Templates Found.\nStep 2: Injection aborted.\n\nResult: The database is empty. You need to inject a template first!');
-        } else {
-          alert(`Circuit Test Complete:\n\nStep 1 Found: ${data.steps[0].count} templates.\nStep 2 Selected: ${data.steps[1].selectedName}\n\nStep 3 Injected Override:\n${data.steps[2].injectedString}`);
-        }
+        alert(`✅ Resonance Hunt Started!\n\nAtlas is now searching LinkedIn and scoring viral structures in the background worker. Check your Railway logs or refresh this page in 2-3 minutes to see the new templates!`);
       }
     } catch (e) {
       console.error(e);
-      alert('Network Error testing circuit.');
+      alert('Network Error triggering resonance hunt.');
     } finally {
       setIsProcessing(false);
     }
   };
+
 
 
   return (
@@ -77,16 +72,17 @@ export default function ResonanceLab() {
               <div style={{display: 'flex', gap: '1rem'}}>
                 <button 
                    className={styles.btnLaunch} 
-                   style={{padding: '0.8rem 1.5rem', fontSize: '0.9rem', backgroundColor: '#e2e8f0', color: '#0f172a', border: '1px solid #cbd5e1'}}
-                   onClick={handleTestCircuit}
+                   style={{padding: '0.8rem 1.5rem', fontSize: '0.9rem', backgroundColor: '#312e81', color: '#ffffff', border: '1px solid #4338ca'}}
+                   onClick={handleRunResonance}
                    disabled={isProcessing}
                 >
-                  {isProcessing ? '⚙️ Running...' : '🔧 Test Circuit'}
+                  {isProcessing ? '⚡ Hunting...' : '🚀 Run Resonance Hunt'}
                 </button>
                 <a href="/" style={{textDecoration: 'none'}}>
                   <button className={styles.btnLaunch} style={{padding: '0.8rem 1.5rem', fontSize: '0.9rem'}}>Back to Atlas ⬅️</button>
                 </a>
               </div>
+
             </div>
 
             <p className={styles.subtitle}>
