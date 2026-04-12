@@ -22,6 +22,8 @@ export default function AtlasDashboard() {
   
   const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState<string>('');
+  const [isPulseLoading, setIsPulseLoading] = useState(false);
+
   
   // Article Viewer Modal State
   const [readingSignal, setReadingSignal] = useState<Signal | null>(null);
@@ -205,6 +207,25 @@ export default function AtlasDashboard() {
     }
   };
 
+  const handlePulseCheck = async () => {
+    setIsPulseLoading(true);
+    try {
+      const res = await fetch('/api/discovery/hyper', { method: 'POST' });
+      const data = await res.json();
+      if (data.error) {
+        alert(`Pulse Check Failed: ${data.details}`);
+      } else {
+        alert(`✅ Atomic Pulse Started!\n\nAtlas is now triangulating social signals from X, Reddit, and Hacker News. Check your backend logs or refresh the feed in 2-3 minutes to see the hyper-viral news!`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network Error triggering pulse check.');
+    } finally {
+      setIsPulseLoading(false);
+    }
+  };
+
+
   return (
     <main className={styles.container}>
       <header className={styles.header}>
@@ -224,6 +245,15 @@ export default function AtlasDashboard() {
                 Resonance Lab 🔬
               </button>
             </a>
+            <button 
+              className={styles.btnSynthesize} 
+              style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
+              onClick={handlePulseCheck}
+              disabled={isPulseLoading}
+            >
+              {isPulseLoading ? '⚡ Triangulating...' : '🚀 Recon Pulse'}
+            </button>
+
             <select 
               className={styles.modeSelect} 
               style={{ margin: 0, padding: '0.5rem 1rem' }}
