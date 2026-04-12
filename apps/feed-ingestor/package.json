@@ -11,7 +11,9 @@
     "@ai-sdk/openai": "^3.0.41",
     "@atlas/db": "workspace:*",
     "@atlas/domain": "workspace:*",
+    "@atlas/integrations": "workspace:*",
     "@atlas/prompts": "workspace:*",
+
     "@atlas/queue": "workspace:*",
     "ai": "^6.0.116",
     "cheerio": "^1.2.0",

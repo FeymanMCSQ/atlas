@@ -16,8 +16,9 @@ const provider = createOpenAI({
   apiKey: process.env.OPENROUTER_API_KEY
 });
 
-// Using a fast model for discovery logic
-const DISCOVERY_MODEL = 'google/gemini-3-flash-preview';
+// Using Grok 4.1 Fast for autonomous discovery logic
+const DISCOVERY_MODEL = 'x-ai/grok-4.1-fast';
+
 
 const DiscoverySchema = z.object({
   queries: z.array(z.string()).describe("List of 3 highly specific Google News search queries targeting current tech/SaaS trends.")

@@ -1,7 +1,22 @@
 import { db } from '@atlas/db';
 import * as dotenv from 'dotenv';
 import { resolve } from 'path';
+import { z } from "zod";
+import { generateObject } from "ai";
+import { createOpenAI } from "@ai-sdk/openai";
+import { searchGoogle } from "@atlas/integrations/src/serper-client.js";
+
 dotenv.config({ path: resolve(__dirname, '../../../.env') });
+
+
+const provider = createOpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY
+});
+
+// Using Grok 4.1 Fast for edgy viral dork generation
+const HUNTER_QUERY_MODEL = 'x-ai/grok-4.1-fast';
+
 
 // ---------------------------------------------------------------------------
 // X-Factor Resonance Hunter
@@ -10,47 +25,61 @@ dotenv.config({ path: resolve(__dirname, '../../../.env') });
 // and feeds qualifying posts into the Resonance Engine.
 // ---------------------------------------------------------------------------
 
-// Rotating query pool — designed to surface posts using proven viral hooks
-const XFACTOR_QUERIES = [
-  `site:linkedin.com/posts/ "but everyone is missing the actual point"`,
-  `site:linkedin.com/posts/ "the hard truth" bootstrapped founder`,
-  `site:linkedin.com/posts/ "I used to think" MRR lessons`,
-  `site:linkedin.com/posts/ "3 things nobody tells you"`,
-  `site:linkedin.com/posts/ "stop doing" indie hacker productivity`,
-  `site:linkedin.com/posts/ "I spent" "$" "months" SaaS`,
-  `site:linkedin.com/posts/ "contrarian" startup insight`,
-  `site:linkedin.com/posts/ "the real reason" AI failed`,
-];
+/**
+ * Dynamic Viral Dork Generator
+ * Uses Grok 4.1 Fast to dream up high-signal LinkedIn searches every run.
+ */
+async function generateHunterQueries(): Promise<string[]> {
+  try {
+    const { object: data } = await generateObject({
+      model: provider(HUNTER_QUERY_MODEL),
+      schema: z.object({
+        queries: z.array(z.string()).describe("List of 5 unique LinkedIn search dorks targeting structural masters.")
+      }),
+      prompt: `
+        You are an elite, edgy viral growth engineer on X and LinkedIn.
+        Your goal is to generate 5 highly specific Google Search "dorks" to find STRUCTURALLY BRILLIANT LinkedIn posts.
+        
+        Focus on finding posts where the formatting is deliberate (short breaks, numbered lists, contrarian openings).
+        Don't just look for "success", look for "frameworks" and "raw insights".
+        
+        Examples of style:
+        - site:linkedin.com/posts/ "the hard truth about" founder
+        - site:linkedin.com/posts/ "I spent" "$" months SaaS
+        - site:linkedin.com/posts/ "stop doing" productivity
+        
+        Generate 5 FRESH, non-repetitive queries now. Respond ONLY as JSON.
+      `
+    });
+    return data.queries;
+  } catch (err) {
+    console.warn(`[X-Factor Hunter] Query generation failed, using fallbacks.`);
+    return [
+        `site:linkedin.com/posts/ "the hard truth" bootstrapped founder`,
+        `site:linkedin.com/posts/ "I used to think" MRR lessons`,
+        `site:linkedin.com/posts/ "stop doing" indie hacker productivity`
+    ];
+  }
+}
+
 
 
 async function searchLinkedInPosts(query: string): Promise<{ url: string; title: string; snippet: string }[]> {
-  const SERPER_API_KEY = process.env.SERPER_KEY;
-  if (!SERPER_API_KEY) {
-    console.warn('[X-Factor Hunter] SERPER_KEY not set. Skipping search.');
-    return [];
-  }
-
   try {
-    const response = await fetch('https://google.serper.dev/search', {
-      method: 'POST',
-      headers: { 'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q: query, num: 15 })
-    });
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`[X-Factor Hunter] Serper API error (${response.status}): ${errorText}`);
-        return [];
-    }
-    const data = await response.json();
-    return (data.organic || [])
+    const organic = await searchGoogle(query, 15);
+    return organic
       .filter((r: any) => r.link && r.link.includes('linkedin.com'))
-      .map((r: any) => ({ url: r.link, title: r.title || '', snippet: r.snippet || '' }));
-  } catch (e: any) {
-    console.error(`[X-Factor Hunter] Search error: ${e.message}`);
+      .map((r: any) => ({
+        url: r.link,
+        title: r.title || '',
+        snippet: r.snippet || ''
+      }));
+  } catch (err: any) {
+    console.error(`[X-Factor Hunter] Serper through integrations failed: ${err.message}`);
     return [];
   }
 }
+
 
 
 async function fetchPostContent(url: string): Promise<string> {
@@ -129,18 +158,23 @@ async function scorePostWithClaude(postText: string, url: string): Promise<{ sco
           },
           {
             role: 'user',
-            content: `Analyze this post for its STRUCTURAL X-FACTOR. 
+            content: `Analyze this post for its STRUCTURAL GOLD / REUSABLE PATTERNS. 
+            
+            Focus on the CADENCE and FORMATTING. Is this a template we can reuse for B2B founder content?
             
             Scoring Criteria (10pts total):
-            1. Hook Strength (0-3pts): Irresistible first line/contrarian tension.
-            2. Reach Independence (0-3pts): Structure works even if the author were unknown.
-            3. Engagement Architecture (0-2pts): Forced interaction rhythmic pattern.
-            4. Originality of Insight (0-2pts): Non-obvious framing.
+            1. Hook Strength (0-3pts): Irresistible contrarian tension or open loop.
+            2. Visual Rhythm (0-3pts): Does it use white space and short sentences to force reading?
+            3. Engagement Logic (0-2pts): Specific structural rhythm (e.g. List -> Insight -> Ask).
+            4. Reach Independence (0-2pts): Works because of the structure, not the author's fame.
+            
+            Note: Be generous with 7+ scores if the layout is mathematically perfect for B2B LinkedIn.
             
             Post to score:
             """
             ${postText.substring(0, 1500)}
             """`
+
           }
 
         ],
@@ -207,24 +241,27 @@ export async function runXFactorHunt() {
   console.log(`\n[X-Factor Hunter] 🎯 Starting daily viral post hunt...`);
 
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  
+  // 1. Dynamically generate edgy search queries via Grok 4.1 Fast
+  console.log(`[X-Factor Hunter] 🧠 Consulting Grok-4.1 for fresh viral dorks...`);
+  const activeQueries = await generateHunterQueries();
 
   // Check if already ran today
   const existing = await db.resonanceReport.findUnique({ where: { date: today } });
+
   if (existing) {
     console.log(`[X-Factor Hunter] Daily report already exists for ${today}. This run will update the existing record.`);
   }
 
 
 
-  // Pick 3 random queries from our pool (to avoid burning all Serper credits daily)
-  const shuffled = XFACTOR_QUERIES.sort(() => Math.random() - 0.5).slice(0, 3);
-
   const candidatePool: { url: string; title: string; snippet: string }[] = [];
-  for (const query of shuffled) {
+  for (const query of activeQueries) {
     console.log(`[X-Factor Hunter] Searching: "${query.substring(0, 60)}..."`);
     const results = await searchLinkedInPosts(query);
     candidatePool.push(...results);
   }
+
 
   // Deduplicate by URL
   const seen = new Set<string>();
@@ -271,9 +308,10 @@ export async function runXFactorHunt() {
       injected: false
     };
 
-    // Only inject posts scoring 7.5+
-    if (score.score >= 7.5 && injectedCount < 5) {
-      console.log(`[X-Factor Hunter] ✅ Score ${score.score} ≥ 7.5! Injecting into Resonance Engine...`);
+    // Only inject posts scoring 6.5+ (Lowered threshold for high-potential candidates)
+    if (score.score >= 6.5 && injectedCount < 5) {
+      console.log(`[X-Factor Hunter] ✅ Score ${score.score} ≥ 6.5! Injecting into Resonance Engine...`);
+
       const template = await injectIntoResonanceEngine(postText);
       if (template) {
         injectedCount++;
