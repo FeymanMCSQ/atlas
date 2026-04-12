@@ -5,6 +5,9 @@ import { emitEvent } from "@atlas/queue";
 import { z } from "zod";
 import { generateObject } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
+import { runAtomicPulseCheck, reconPulseTopic } from "./pulse-ingestor.js";
+
+
 
 import * as dotenv from "dotenv";
 import { resolve } from "path";
@@ -91,7 +94,25 @@ export async function discoverTrendingNews() {
 
     console.log(`[Discovery Engine] ✅ Ingested ${totalIngested} trending articles autonomously into Information Mode.`);
 
+    // After news discovery, run a hyper-pulse check to see if we missed any "underground" signals
+    await performHyperDiscovery();
+
   } catch (err) {
     console.error(`[Discovery Engine] ❌ Failure in automated discovery:`, err);
   }
 }
+
+/**
+ * HYPER-DISCOVERY: Triangulate social signals and perform deep recon.
+ */
+export async function performHyperDiscovery() {
+    const topics = await runAtomicPulseCheck();
+    
+    for (const signal of topics) {
+        // High urgency signals get immediate deep recon
+        if (signal.urgency >= 7) {
+            await reconPulseTopic(signal.topic);
+        }
+    }
+}
+

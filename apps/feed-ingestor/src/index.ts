@@ -14,7 +14,8 @@ import { db } from "@atlas/db";
 import { emitEvent, closeQueue, createEventWorker } from "@atlas/queue";
 import { EventTypes, ContentIngestedPayload, AtlasEvent } from "@atlas/domain";
 
-import { discoverTrendingNews } from "./discovery.js";
+import { discoverTrendingNews, performHyperDiscovery } from "./discovery.js";
+
 
 // ---------------------------------------------------------------------------
 // Canonical feed list — this is the SINGLE source of truth.
@@ -294,6 +295,20 @@ async function startDaemon() {
       console.error(`[X-Factor Hunter] Manual Hunt Failed:`, e);
     }
   });
+
+  /**
+   * 6. Listen for Manual Hyper-Discovery Requests
+   */
+  createEventWorker(EventTypes.HYPER_DISCOVERY_REQUESTED, async (event: AtlasEvent) => {
+    console.log(`[Atlas Daemon] 📥 Manual Hyper-Discovery Triggered! Triangulating viral signals...`);
+    try {
+      await performHyperDiscovery();
+    } catch (e) {
+      console.error(`[Discovery Engine] Manual Atomic Pulse Failed:`, e);
+    }
+  });
+
+
 
   console.log(`[Atlas Daemon] Workers successfully scheduled. System will remain active.`);
 
