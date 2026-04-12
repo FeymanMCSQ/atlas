@@ -129,12 +129,20 @@ async function scorePostWithClaude(postText: string, url: string): Promise<{ sco
           },
           {
             role: 'user',
-            content: `Score this post from 1-10 on its STRUCTURAL QUALITY:
+            content: `Analyze this post for its STRUCTURAL X-FACTOR. 
             
+            Scoring Criteria (10pts total):
+            1. Hook Strength (0-3pts): Irresistible first line/contrarian tension.
+            2. Reach Independence (0-3pts): Structure works even if the author were unknown.
+            3. Engagement Architecture (0-2pts): Forced interaction rhythmic pattern.
+            4. Originality of Insight (0-2pts): Non-obvious framing.
+            
+            Post to score:
             """
             ${postText.substring(0, 1500)}
             """`
           }
+
         ],
         response_format: {
           type: 'json_schema',
