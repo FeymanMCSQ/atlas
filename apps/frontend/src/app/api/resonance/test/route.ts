@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       step: 1,
       description: 'Fetch Templates',
       count: templates.length,
-      templates: templates.map(t => ({ id: t.id, name: t.name }))
+      templates: templates.map((t: any) => ({ id: t.id, name: t.name }))
     });
 
     console.log('[Resonance Circuit Test] Step 2: Selecting random template and mapping base prompt...');
