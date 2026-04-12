@@ -14,12 +14,6 @@ import { resolve } from "path";
 
 dotenv.config({ path: resolve(__dirname, "../../../.env") });
 
-console.log(`[Content Brain] 🛠️ Environment Check:`);
-console.log(`  - OPENROUTER_API_KEY: ${process.env.OPENROUTER_API_KEY ? "Present ✅" : "MISSING ❌"}`);
-console.log(`  - SERPER_KEY: ${process.env.SERPER_KEY ? "Present ✅" : "MISSING ❌"}`);
-console.log(`  - FAL_KEY: ${process.env.FAL_KEY ? "Present ✅" : "MISSING ❌"}`);
-console.log(`  - DATABASE_URL: ${process.env.DATABASE_URL ? "Present ✅" : "MISSING ❌"}`);
-
 const provider = createOpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
   apiKey: process.env.OPENROUTER_API_KEY
@@ -128,8 +122,6 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
     const targetModel = payload.model || DEFAULT_MODEL;
 
     // --- STAGE 1: EXTRACT ---
-    console.log(`[Content Brain] Stage 1/6: Extracting Signals (Model: ${targetModel})...`);
-    const s1Start = Date.now();
     const { object: signalsObj } = await generateObject({
       model: provider(targetModel),
       schema: ExtractSchema,
@@ -137,28 +129,24 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
           .replace('{{title}}', item.title)
           .replace('{{content}}', rawContent),
     });
-    console.log(`[Content Brain] ✅ Stage 1 Done (${Date.now() - s1Start}ms). Found ${signalsObj.signals.length} signals.`);
+    console.log(`[Content Brain] ✅ Stage 1 Done. Found ${signalsObj.signals.length} signals.`);
 
     // --- STAGE 2: FRAME ---
-    console.log(`[Content Brain] Stage 2/6: Framing Insight...`);
-    const s2Start = Date.now();
     const { object: frameObj } = await generateObject({
       model: provider(targetModel),
       schema: FrameSchema,
       prompt: Prompts.FRAME_INSIGHT.replace('{{signals}}', signalsObj.signals.join('\n')),
     });
-    console.log(`[Content Brain] ✅ Stage 2 Done (${Date.now() - s2Start}ms). Insight: "${frameObj.insight.substring(0, 60)}..."`);
+    console.log(`[Content Brain] ✅ Stage 2 Done.`);
 
     // --- STAGE 3: HOOKS ---
-    console.log(`[Content Brain] Stage 3/6: Generating Hooks...`);
-    const s3Start = Date.now();
     const { object: hooksObj } = await generateObject({
       model: provider(targetModel),
       schema: HooksSchema,
       prompt: Prompts.GENERATE_HOOKS.replace('{{insight}}', frameObj.insight),
     });
     const selectedHook = hooksObj.hooks[0];
-    console.log(`[Content Brain] ✅ Stage 3 Done (${Date.now() - s3Start}ms). Selected Hook: "${selectedHook}"`);
+    console.log(`[Content Brain] ✅ Stage 3 Done.`);
 
     // --- STAGE 3.5: RESONANCE ---
     console.log(`[Content Brain] Stage 3.5: Checking Resonance Engine...`);
@@ -176,31 +164,25 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
     }
 
     // --- STAGE 4: DRAFT ---
-    console.log(`[Content Brain] Stage 4/6: Synthesis Initial Drafts...`);
-    const s4Start = Date.now();
     const { object: initialDraft } = await generateObject({
       model: provider(targetModel),
       schema: DraftSchema,
       prompt: draftPrompt,
     });
-    console.log(`[Content Brain] ✅ Stage 4 Done (${Date.now() - s4Start}ms).`);
+    console.log(`[Content Brain] ✅ Stage 4 Done.`);
 
     // --- STAGE 5: EVAL ---
-    console.log(`[Content Brain] Stage 5/6: Quality Evaluation...`);
-    const s5Start = Date.now();
     const { object: evalObj } = await generateObject({
       model: provider(targetModel),
       schema: EvalSchema,
       prompt: Prompts.EVALUATE_DRAFT.replace('{{draft}}', initialDraft.x_post),
     });
-    console.log(`[Content Brain] ✅ Stage 5 Done (${Date.now() - s5Start}ms). Score: ${evalObj.score}/10`);
+    console.log(`[Content Brain] ✅ Stage 5 Done. Score: ${evalObj.score}/10`);
 
     let finalDraft = initialDraft;
 
     // --- STAGE 6: REWRITE ---
     if (evalObj.score < 8 && evalObj.flaws.length > 0) {
-      console.log(`[Content Brain] Stage 6/6: Triggering REWRITE (Score ${evalObj.score} < 8)...`);
-      const s6Start = Date.now();
       const { object: rewrittenDraft } = await generateObject({
         model: provider(targetModel),
         schema: DraftSchema,
@@ -209,9 +191,7 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
           .replace('{{flaws}}', evalObj.flaws.join('\n')),
       });
       finalDraft = rewrittenDraft;
-      console.log(`[Content Brain] ✅ Stage 6 Done (${Date.now() - s6Start}ms).`);
-    } else {
-      console.log(`[Content Brain] Stage 6/6: Skipping rewrite (Quality passed).`);
+      console.log(`[Content Brain] ✅ Stage 6 Done (Rewrite applied).`);
     }
 
     // --- STAGE 6.5: VISUALS ---
