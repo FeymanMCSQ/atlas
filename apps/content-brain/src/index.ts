@@ -53,10 +53,12 @@ const EvalSchema = z.object({
   flaws: z.array(z.string()).describe("A list of explicit flaws referencing the negative tone/structure traits.")
 });
 
+const ImageHeadlineSchema = z.object({
   headline: z.string().describe("A hyper-condensed 4 to 7 word news headline representing the core insight.")
 });
 
 /**
+
  * Smart Structural Matcher
  * Analyzes the news item and available templates to find the most resonant structural fit.
  */
