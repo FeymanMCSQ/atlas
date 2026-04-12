@@ -82,31 +82,37 @@ async function scorePostWithClaude(postText: string, url: string): Promise<{ sco
       },
       body: JSON.stringify({
         model: 'anthropic/claude-opus-4.6',
-        messages: [{
-          role: 'user',
-          content: `You are an elite marketing psychologist judging the structural X-Factor of social media posts.
-
-Score this post from 1-10 on its STRUCTURAL QUALITY (NOT based on the author's fame or subject matter):
-
-Scoring Criteria:
-1. Hook Strength (0-3pts): Does the first line create an irresistible open loop or contrarian tension?
-2. Reach Independence (0-3pts): Would this post perform well for a completely unknown person? Or does it rely on the author being famous?
-3. Engagement Architecture (0-2pts): Does the structure force a comment, share, or emotional reaction?
-4. Originality of Insight (0-2pts): Is the insight genuinely non-obvious, or is it a cliché?
-
-Post to score:
-"""
-${postText.substring(0, 1500)}
-"""
-
-Respond ONLY as JSON with this exact structure:
-{
-  "score": <number 1-10>,
-  "hookArchetype": "<the psychological hook type used in one phrase>",
-  "whyItHelps": "<one sentence on what structural technique Atlas content brain should borrow from this>"
-}`
-        }],
-        response_format: { type: 'json_object' }
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a marketing psychologist API. You output ONLY raw JSON that conforms strictly to the provided schema. No conversational filler, no markdown, no backticks.'
+          },
+          {
+            role: 'user',
+            content: `Score this post from 1-10 on its STRUCTURAL QUALITY:
+            
+            """
+            ${postText.substring(0, 1500)}
+            """`
+          }
+        ],
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'xfactor_score',
+            strict: true,
+            schema: {
+              type: 'object',
+              properties: {
+                score: { type: 'number' },
+                hookArchetype: { type: 'string' },
+                whyItHelps: { type: 'string' }
+              },
+              required: ['score', 'hookArchetype', 'whyItHelps'],
+              additionalProperties: false
+            }
+          }
+        }
       })
     });
 
@@ -127,6 +133,7 @@ Respond ONLY as JSON with this exact structure:
     return null;
   }
 }
+
 
 
 async function injectIntoResonanceEngine(postText: string): Promise<{ name: string } | null> {
