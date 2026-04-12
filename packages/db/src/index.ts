@@ -1,10 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import { withAccelerate } from "@prisma/extension-accelerate";
-import * as dotenv from "dotenv";
-import { resolve } from "path";
-
-// Load environment variables from the root monorepo .env file
-dotenv.config({ path: resolve(__dirname, "../../../.env") });
 
 /**
  * Instantiate a single instance of PrismaClient and cache it globally
@@ -12,12 +7,20 @@ dotenv.config({ path: resolve(__dirname, "../../../.env") });
  */
 const globalForPrisma = globalThis as unknown as { prisma: any };
 
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  console.warn("[DB] ⚠️ DATABASE_URL is not set. Prisma will fail if used.");
+} else {
+  console.log(`[DB] initializing client (Accelerate: ${databaseUrl.startsWith('prisma://')})`);
+}
+
 export const db =
   globalForPrisma.prisma ||
   new PrismaClient({
     // With Prisma 7 + Accelerate, the URL must be passed directly to the client
     // instead of being read from schema.prisma.
-    accelerateUrl: process.env.DATABASE_URL,
+    accelerateUrl: databaseUrl,
   }).$extends(withAccelerate());
 
 if (process.env.NODE_ENV !== "production") {

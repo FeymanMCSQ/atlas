@@ -9,7 +9,11 @@
 import { type ConnectionOptions } from "bullmq";
 
 export function getRedisConnection(): ConnectionOptions {
-  const redisUrl = process.env.REDIS_URL;
+  // Check common Railway/Vercel variants for Redis connection strings
+  const redisUrl = 
+    process.env.REDIS_URL || 
+    process.env.REDIS_PUBLIC_URL || 
+    process.env.RAILWAY_REDIS_URL;
 
   if (redisUrl) {
     console.log(`[Queue] Initializing Redis connection with URL (SSL: ${redisUrl.startsWith('rediss')})`);
@@ -34,7 +38,8 @@ export function getRedisConnection(): ConnectionOptions {
     }
   }
 
-  console.log(`[Queue] Falling back to local Redis (localhost:6379)`);
+  // Fallback for local dev - strictly 127.0.0.1 to avoid ipv6 resolution issues
+  console.log(`[Queue] ⚠️ No REDIS_URL found. Falling back to local Redis (127.0.0.1:6379)`);
   return {
     host: process.env.REDIS_HOST ?? "127.0.0.1",
     port: Number(process.env.REDIS_PORT ?? 6379),
