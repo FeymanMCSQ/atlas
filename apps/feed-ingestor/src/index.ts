@@ -256,6 +256,9 @@ async function startDaemon() {
   // 1. Run an immediate ingestion cycle on startup
   await runIngestionCycle();
 
+  console.log(`[Atlas Daemon] ⏰ Running ONE-TIME X-Factor Hunt for testing...`);
+  await runXFactorHunt();
+
   // 2. Schedule standard news feed ingestion (Hourly)
   cron.schedule('0 * * * *', async () => {
     console.log(`[Atlas Daemon] ⏰ Triggering hourly feed ingestion...`);

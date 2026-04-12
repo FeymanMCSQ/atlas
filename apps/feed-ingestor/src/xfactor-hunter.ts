@@ -115,7 +115,8 @@ Respond ONLY as JSON with this exact structure:
 async function injectIntoResonanceEngine(postText: string): Promise<{ name: string } | null> {
   try {
     // Call the Resonance API via localhost during development / Railway internal URL in prod
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const baseUrl = process.env.FRONTEND_URL || 'https://atlas-frontend-sigma.vercel.app';
+
     const req = await fetch(`${baseUrl}/api/resonance`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -135,12 +136,13 @@ export async function runXFactorHunt() {
 
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
 
-  // Check if already ran today
+  // Check if already ran today (TEMPORARILY DISABLED FOR TESTING)
   const existing = await db.resonanceReport.findUnique({ where: { date: today } });
   if (existing) {
-    console.log(`[X-Factor Hunter] Already ran today (${today}). Skipping.`);
-    return;
+    console.log(`[X-Factor Hunter] Already ran today (${today}). OVERRIDING AND RUNNING ANYWAY FOR TESTING.`);
+    // return;
   }
+
 
   // Pick 3 random queries from our pool (to avoid burning all Serper credits daily)
   const shuffled = XFACTOR_QUERIES.sort(() => Math.random() - 0.5).slice(0, 3);
