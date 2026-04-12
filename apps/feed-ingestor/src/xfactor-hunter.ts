@@ -68,8 +68,10 @@ async function fetchPostContent(url: string): Promise<string> {
     return text.substring(0, 3000);
   } catch (e: any) {
     console.warn(`[X-Factor Hunter] Jina fetch error for ${url}: ${e.message}`);
+    return '';
   }
 }
+
 
 /**
  * Rapid "Vibe Check" Pre-Filter
