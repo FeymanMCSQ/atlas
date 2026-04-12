@@ -132,15 +132,28 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
     });
     const selectedHook = hooksObj.hooks[0];
 
-    // --- STAGE 3.5: RESONANCE ---
+    // --- STAGE 3.5: RESONANCE ENGINE ---
+    // [STEP 1] Fetch existing psychological templates
+    console.log(`[Resonance Circuit] Step 1: Connecting to DB to fetch post templates...`);
     const templates = await db.postTemplate.findMany();
+    console.log(`[Resonance Circuit] Step 1 Complete -> Found ${templates.length} templates.`);
+
     let draftPrompt = Prompts.GENERATE_DRAFT
       .replace('{{hook}}', selectedHook)
       .replace('{{insight}}', frameObj.insight);
 
+    // [STEP 2] Check availability and select 
+    console.log(`[Resonance Circuit] Step 2: Evaluating template availability...`);
     if (templates.length > 0) {
       const template = templates[Math.floor(Math.random() * templates.length)];
+      console.log(`[Resonance Circuit] Step 2 Complete -> Selected "${template.name}"`);
+      
+      // [STEP 3] Inject critical formatting override
+      console.log(`[Resonance Circuit] Step 3: Injecting formatting override into system prompt...`);
       draftPrompt += `\n\nCRITICAL FORMATTING OVERRIDE (ATLAS RESONANCE ENGINE):\n${template.formatStructure}\n\n Pace: ${template.pacing}`;
+      console.log(`[Resonance Circuit] Step 3 Complete -> Injection string appended successfully.`);
+    } else {
+      console.log(`[Resonance Circuit] Step 2/3 Result -> No templates in DB. Bypassing engine.`);
     }
 
 

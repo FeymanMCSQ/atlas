@@ -43,16 +43,52 @@ export default function ResonanceLab() {
     }
   };
 
+  const handleTestCircuit = async () => {
+    setIsProcessing(true);
+    try {
+      const res = await fetch('/api/resonance/test');
+      const data = await res.json();
+      if (data.error) {
+        alert(`Circuit Failed: ${data.details}`);
+      } else {
+        console.log("Resonance Circuit Result:", data.steps);
+        const latestStep = data.steps[data.steps.length - 1];
+        if (latestStep.status === 'SKIPPED_EMPTY_DB') {
+          alert('Circuit Test Complete:\n\nStep 1: 0 Templates Found.\nStep 2: Injection aborted.\n\nResult: The database is empty. You need to inject a template first!');
+        } else {
+          alert(`Circuit Test Complete:\n\nStep 1 Found: ${data.steps[0].count} templates.\nStep 2 Selected: ${data.steps[1].selectedName}\n\nStep 3 Injected Override:\n${data.steps[2].injectedString}`);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Network Error testing circuit.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+
   return (
     <div className={styles.container}>
       <main className={styles.main}>
         <div className={styles.header}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
               <h1 className={styles.title}>The Resonance Engine 🔬</h1>
-              <a href="/" style={{textDecoration: 'none'}}>
-                <button className={styles.btnLaunch} style={{padding: '0.8rem 1.5rem', fontSize: '0.9rem'}}>Back to Atlas ⬅️</button>
-              </a>
+              <div style={{display: 'flex', gap: '1rem'}}>
+                <button 
+                   className={styles.btnLaunch} 
+                   style={{padding: '0.8rem 1.5rem', fontSize: '0.9rem', backgroundColor: '#e2e8f0', color: '#0f172a', border: '1px solid #cbd5e1'}}
+                   onClick={handleTestCircuit}
+                   disabled={isProcessing}
+                >
+                  {isProcessing ? '⚙️ Running...' : '🔧 Test Circuit'}
+                </button>
+                <a href="/" style={{textDecoration: 'none'}}>
+                  <button className={styles.btnLaunch} style={{padding: '0.8rem 1.5rem', fontSize: '0.9rem'}}>Back to Atlas ⬅️</button>
+                </a>
+              </div>
             </div>
+
             <p className={styles.subtitle}>
               Reverse-engineer viral social media psychology. Paste a highly-successful post from X or LinkedIn below. Claude-Opus-4.6 will extract the psychological hook, pacing, and formatting structure, permanently saving it for Atlas Content Brain to mimic.
             </p>
