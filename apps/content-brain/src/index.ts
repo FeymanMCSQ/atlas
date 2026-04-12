@@ -2,8 +2,11 @@ import { createEventWorker, emitEvent } from "@atlas/queue";
 import { EventTypes, AtlasEvent, ContentDraftRequestedPayload } from "@atlas/domain";
 import { db } from "@atlas/db";
 import { FounderPrompts, InformationPrompts } from "@atlas/prompts";
+// @ts-ignore
 import { searchGoogleImages } from "@atlas/integrations/src/serper-client.js";
+// @ts-ignore
 import { generateImageWithFlux } from "@atlas/integrations/src/fal-client.js";
+
 
 import { z } from "zod";
 import { generateObject } from "ai";
@@ -13,12 +16,6 @@ import * as dotenv from "dotenv";
 import { resolve } from "path";
 
 dotenv.config({ path: resolve(__dirname, "../../../.env") });
-
-console.log(`[Content Brain] 🛠️ Environment Check:`);
-console.log(`  - OPENROUTER_API_KEY: ${process.env.OPENROUTER_API_KEY ? "Present ✅" : "MISSING ❌"}`);
-console.log(`  - SERPER_KEY: ${process.env.SERPER_KEY ? "Present ✅" : "MISSING ❌"}`);
-console.log(`  - FAL_KEY: ${process.env.FAL_KEY ? "Present ✅" : "MISSING ❌"}`);
-console.log(`  - DATABASE_URL: ${process.env.DATABASE_URL ? "Present ✅" : "MISSING ❌"}`);
 
 const provider = createOpenAI({
   baseURL: 'https://openrouter.ai/api/v1',
@@ -60,44 +57,31 @@ const ImageHeadlineSchema = z.object({
   headline: z.string().describe("A hyper-condensed 4 to 7 word news headline representing the core insight.")
 });
 
-/**
- * AI Generation Pipeline orchestrator logic.
- */
 async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
-  const startTime = Date.now();
-  const timestamp = new Array(20).fill('-').join('');
-  
-  console.log(`\n${timestamp}`);
-  console.log(`[Content Brain] ⚡ STARTING PIPELINE for Item: ${payload.contentItemId}`);
-  console.log(`[Content Brain] Model requested: ${payload.model || DEFAULT_MODEL}`);
-  console.log(`${timestamp}\n`);
-
   try {
-    console.log(`[Content Brain] [DB] Fetching ContentItem...`);
     const item = await db.contentItem.findUnique({ where: { id: payload.contentItemId } });
+
     
     if (!item) {
       console.error(`[Content Brain] ❌ ContentItem ${payload.contentItemId} not found in database.`);
       return;
     }
-    console.log(`[Content Brain] [DB] Found Item: "${item.title}" (Mode: ${item.mode}, Source: ${item.source})`);
 
     let rawContent = '';
 
+
     if (item.source === 'transcript') {
-      console.log(`[Content Brain] Source is transcript. Fetching transcript text...`);
       const data = item.sourceData as any;
       if (data && data.transcriptId) {
         const transcript = await db.transcript.findUnique({ where: { id: data.transcriptId } });
         rawContent = transcript?.transcriptText || '';
       }
     } else {
-      console.log(`[Content Brain] Source is non-transcript. Using summary/data...`);
       rawContent = item.summary || JSON.stringify(item.sourceData);
 
       if (item.url && item.url.startsWith('http')) {
-        console.log(`[Content Brain] 🕸️ URL found. Invoking Deep Scraper via Jina Reader: ${item.url}`);
         const scrapeStart = Date.now();
+
         try {
           const jinaRes = await fetch(`https://r.jina.ai/${item.url}`, {
             signal: AbortSignal.timeout(15000)
@@ -106,30 +90,24 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
              const deepMarkdown = await jinaRes.text();
              if (deepMarkdown && deepMarkdown.length > 50) {
                rawContent = deepMarkdown.substring(0, 8000); 
-               console.log(`[Content Brain] ✅ Deep Scrape successful (${Date.now() - scrapeStart}ms): ${rawContent.length} chars acquired.`);
-             } else {
-               console.log(`[Content Brain] ⚠️ Deep Scrape returned blank markdown (took ${Date.now() - scrapeStart}ms).`);
              }
-          } else {
-             console.log(`[Content Brain] ⚠️ Deep Scrape blocked or failed (HTTP ${jinaRes.status}, took ${Date.now() - scrapeStart}ms).`);
           }
         } catch (e: any) {
-           console.warn(`[Content Brain] ⚠️ Deep Scrape timeout/failure after ${Date.now() - scrapeStart}ms: ${e.message}.`);
+           // Scrape failed, moving on with summary
         }
+
       }
     }
 
     if (!rawContent || rawContent.trim() === '') {
-      console.log(`[Content Brain] ❌ Extracted text is empty. ABORTING.`);
       return;
     }
+
 
     const Prompts = item.mode === 'FOUNDER' ? FounderPrompts : InformationPrompts;
     const targetModel = payload.model || DEFAULT_MODEL;
 
     // --- STAGE 1: EXTRACT ---
-    console.log(`[Content Brain] Stage 1/6: Extracting Signals (Model: ${targetModel})...`);
-    const s1Start = Date.now();
     const { object: signalsObj } = await generateObject({
       model: provider(targetModel),
       schema: ExtractSchema,
@@ -137,31 +115,24 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
           .replace('{{title}}', item.title)
           .replace('{{content}}', rawContent),
     });
-    console.log(`[Content Brain] ✅ Stage 1 Done (${Date.now() - s1Start}ms). Found ${signalsObj.signals.length} signals.`);
 
     // --- STAGE 2: FRAME ---
-    console.log(`[Content Brain] Stage 2/6: Framing Insight...`);
-    const s2Start = Date.now();
     const { object: frameObj } = await generateObject({
       model: provider(targetModel),
       schema: FrameSchema,
       prompt: Prompts.FRAME_INSIGHT.replace('{{signals}}', signalsObj.signals.join('\n')),
     });
-    console.log(`[Content Brain] ✅ Stage 2 Done (${Date.now() - s2Start}ms). Insight: "${frameObj.insight.substring(0, 60)}..."`);
+
 
     // --- STAGE 3: HOOKS ---
-    console.log(`[Content Brain] Stage 3/6: Generating Hooks...`);
-    const s3Start = Date.now();
     const { object: hooksObj } = await generateObject({
       model: provider(targetModel),
       schema: HooksSchema,
       prompt: Prompts.GENERATE_HOOKS.replace('{{insight}}', frameObj.insight),
     });
     const selectedHook = hooksObj.hooks[0];
-    console.log(`[Content Brain] ✅ Stage 3 Done (${Date.now() - s3Start}ms). Selected Hook: "${selectedHook}"`);
 
     // --- STAGE 3.5: RESONANCE ---
-    console.log(`[Content Brain] Stage 3.5: Checking Resonance Engine...`);
     const templates = await db.postTemplate.findMany();
     let draftPrompt = Prompts.GENERATE_DRAFT
       .replace('{{hook}}', selectedHook)
@@ -169,38 +140,28 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
 
     if (templates.length > 0) {
       const template = templates[Math.floor(Math.random() * templates.length)];
-      console.log(`[Content Brain] 🔬 Resonance Template Found: "${template.name}". Injecting...`);
       draftPrompt += `\n\nCRITICAL FORMATTING OVERRIDE (ATLAS RESONANCE ENGINE):\n${template.formatStructure}\n\n Pace: ${template.pacing}`;
-    } else {
-      console.log(`[Content Brain] No resonance templates in DB. Using standard generation.`);
     }
 
+
     // --- STAGE 4: DRAFT ---
-    console.log(`[Content Brain] Stage 4/6: Synthesis Initial Drafts...`);
-    const s4Start = Date.now();
     const { object: initialDraft } = await generateObject({
       model: provider(targetModel),
       schema: DraftSchema,
       prompt: draftPrompt,
     });
-    console.log(`[Content Brain] ✅ Stage 4 Done (${Date.now() - s4Start}ms).`);
 
     // --- STAGE 5: EVAL ---
-    console.log(`[Content Brain] Stage 5/6: Quality Evaluation...`);
-    const s5Start = Date.now();
     const { object: evalObj } = await generateObject({
       model: provider(targetModel),
       schema: EvalSchema,
       prompt: Prompts.EVALUATE_DRAFT.replace('{{draft}}', initialDraft.x_post),
     });
-    console.log(`[Content Brain] ✅ Stage 5 Done (${Date.now() - s5Start}ms). Score: ${evalObj.score}/10`);
 
     let finalDraft = initialDraft;
 
     // --- STAGE 6: REWRITE ---
     if (evalObj.score < 8 && evalObj.flaws.length > 0) {
-      console.log(`[Content Brain] Stage 6/6: Triggering REWRITE (Score ${evalObj.score} < 8)...`);
-      const s6Start = Date.now();
       const { object: rewrittenDraft } = await generateObject({
         model: provider(targetModel),
         schema: DraftSchema,
@@ -209,16 +170,11 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
           .replace('{{flaws}}', evalObj.flaws.join('\n')),
       });
       finalDraft = rewrittenDraft;
-      console.log(`[Content Brain] ✅ Stage 6 Done (${Date.now() - s6Start}ms).`);
-    } else {
-      console.log(`[Content Brain] Stage 6/6: Skipping rewrite (Quality passed).`);
     }
 
     // --- STAGE 6.5: VISUALS ---
     let finalMediaUrl: string | undefined = undefined;
     if (process.env.FAL_KEY) {
-      console.log(`[Content Brain] Stage 6.5: Generating visual media (Mode: ${item.mode})...`);
-      const mediaStart = Date.now();
       try {
         if (item.mode === 'FOUNDER') {
           const imagePrompt = `A minimalist, high-contrast tech brain dump... ${frameObj.insight}`;
@@ -231,17 +187,13 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
           });
           finalMediaUrl = await generateImageWithFlux(`Minimalist tech news plate: "${imageTextObj.headline}"`);
         }
-        console.log(`[Content Brain] ✅ Visuals generated (${Date.now() - mediaStart}ms): ${finalMediaUrl}`);
       } catch (mediaErr) {
-        console.warn(`[Content Brain] ⚠️ Visual generation failed:`, mediaErr);
+        // Silently ignore media errors
       }
-    } else {
-      console.log(`[Content Brain] Skipping Stage 6.5 (FAL_KEY missing).`);
     }
 
+
     // --- STAGE 7: PERSIST ---
-    console.log(`[Content Brain] Stage 7: Persisting drafts to DB...`);
-    const persistStart = Date.now();
     const draftX = await db.draft.create({
       data: {
         contentItemId: item.id,
@@ -263,23 +215,17 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
         mediaUrl: finalMediaUrl
       }
     });
-    console.log(`[Content Brain] ✅ DB Persistence Done (${Date.now() - persistStart}ms). Draft IDs: X=${draftX.id}, LN=${draftLn.id}`);
+
 
     // --- STAGE 8: DISPATCH ---
-    console.log(`[Content Brain] Stage 8: Emitting completion event...`);
     await emitEvent(EventTypes.CONTENT_DRAFTED, {
       contentItemId: item.id,
       draftIds: [draftX.id, draftLn.id],
       platforms: ['x', 'linkedin']
     });
-    
-    const totalTime = Date.now() - startTime;
-    console.log(`\n${timestamp}`);
-    console.log(`[Content Brain] 🎉 PIPELINE COMPLETE for ${item.id}`);
-    console.log(`[Content Brain] Total Processing Time: ${(totalTime / 1000).toFixed(2)}s`);
-    console.log(`${timestamp}\n`);
 
   } catch (err: any) {
+
     console.error(`\n${new Array(40).fill('!').join('')}`);
     console.error(`[Content Brain] 🔥 FATAL PIPELINE ERROR for Item: ${payload.contentItemId}`);
     console.error(`[Content Brain] Error Name: ${err.name}`);
@@ -293,25 +239,18 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
  * Worker Boot sequence wrapper.
  */
 function startWorker() {
-  console.log("\n[Content Brain] 🚀 Worker Initializing...");
-  console.log(`[Content Brain] 📅 Timestamp: ${new Date().toISOString()}`);
-
   const worker = createEventWorker(EventTypes.CONTENT_DRAFT_REQUESTED, async (event: AtlasEvent) => {
-    console.log(`[Content Brain] 📥 RECEIVED EVENT: ${event.eventType}`);
     if (event.eventType === EventTypes.CONTENT_DRAFT_REQUESTED) {
       await processDraftPipeline(event.payload as ContentDraftRequestedPayload);
-    } else {
-      console.warn(`[Content Brain] ⚠️ Ignored unknown event type: ${event.eventType}`);
     }
   });
 
-  console.log(`[Content Brain] 👂 Listening for ${EventTypes.CONTENT_DRAFT_REQUESTED} queue...`);
 
   const shutdown = async () => {
-    console.log("\n[Content Brain] 🛑 Shutting down...");
     await worker.close();
     process.exit(0);
   };
+
 
   process.on("SIGINT", shutdown);
   process.on("SIGTERM", shutdown);
