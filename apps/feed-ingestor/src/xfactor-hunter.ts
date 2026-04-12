@@ -12,14 +12,16 @@ dotenv.config({ path: resolve(__dirname, '../../../.env') });
 
 // Rotating query pool — designed to surface posts using proven viral hooks
 const XFACTOR_QUERIES = [
-  `site:linkedin.com "but everyone is missing the actual point" founder startup AI 2025`,
-  `site:linkedin.com "the hard truth" bootstrapped SaaS founder 2025`,
-  `site:linkedin.com "I used to think" startup lessons MRR 2025`,
-  `site:linkedin.com "3 things nobody tells you" developer founder 2025`,
-  `site:linkedin.com "the real reason" startup failed SaaS founder 2025`,
-  `site:linkedin.com "stop doing" developer indie hacker productivity 2025`,
-  `site:linkedin.com "I built" "MRR" OR "$" solo founder bootstrapped 2025`,
+  `site:linkedin.com/posts/ "but everyone is missing the actual point"`,
+  `site:linkedin.com/posts/ "the hard truth" bootstrapped founder`,
+  `site:linkedin.com/posts/ "I used to think" MRR lessons`,
+  `site:linkedin.com/posts/ "3 things nobody tells you"`,
+  `site:linkedin.com/posts/ "stop doing" indie hacker productivity`,
+  `site:linkedin.com/posts/ "I spent" "$" "months" SaaS`,
+  `site:linkedin.com/posts/ "contrarian" startup insight`,
+  `site:linkedin.com/posts/ "the real reason" AI failed`,
 ];
+
 
 async function searchLinkedInPosts(query: string): Promise<{ url: string; title: string; snippet: string }[]> {
   const SERPER_API_KEY = process.env.SERPER_KEY;
@@ -32,8 +34,9 @@ async function searchLinkedInPosts(query: string): Promise<{ url: string; title:
     const response = await fetch('https://google.serper.dev/search', {
       method: 'POST',
       headers: { 'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ q: query, num: 5 })
+      body: JSON.stringify({ q: query, num: 15 })
     });
+
     if (!response.ok) {
         const errorText = await response.text();
         console.error(`[X-Factor Hunter] Serper API error (${response.status}): ${errorText}`);
@@ -53,8 +56,9 @@ async function searchLinkedInPosts(query: string): Promise<{ url: string; title:
 async function fetchPostContent(url: string): Promise<string> {
   try {
     const res = await fetch(`https://r.jina.ai/${url}`, {
-      signal: AbortSignal.timeout(12000)
+      signal: AbortSignal.timeout(30000) // Increased to 30s for heavy LinkedIn pages
     });
+
     if (!res.ok) {
         console.warn(`[X-Factor Hunter] Jina fetch failed for ${url}: HTTP ${res.status}`);
         return '';
@@ -64,9 +68,43 @@ async function fetchPostContent(url: string): Promise<string> {
     return text.substring(0, 3000);
   } catch (e: any) {
     console.warn(`[X-Factor Hunter] Jina fetch error for ${url}: ${e.message}`);
-    return '';
   }
 }
+
+/**
+ * Rapid "Vibe Check" Pre-Filter
+ * Uses Gemini 3.1 Flash to quickly discard generic posts based on snippets.
+ */
+async function preFilterPost(title: string, snippet: string): Promise<number> {
+  const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+  if (!OPENROUTER_API_KEY) return 0;
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${OPENROUTER_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'google/gemini-3.1-flash-lite-preview',
+        messages: [{
+          role: 'user',
+          content: `On a scale of 1-10, how likely is this LinkedIn post to have an UNCONVENTIONAL, non-generic structural hook?
+          
+          Title: ${title}
+          Snippet: ${snippet}
+          
+          Respond with just a single number.`
+        }]
+      })
+    });
+    if (!response.ok) return 5; // Default to neutral if API fails
+    const data = await response.json();
+    const score = parseInt(data.choices?.[0]?.message?.content?.trim() || '0');
+    return isNaN(score) ? 0 : score;
+  } catch {
+    return 0;
+  }
+}
+
 
 
 async function scorePostWithClaude(postText: string, url: string): Promise<{ score: number; hookArchetype: string; whyItHelps: string } | null> {
@@ -191,15 +229,22 @@ export async function runXFactorHunt() {
   const reportItems: any[] = [];
   let injectedCount = 0;
 
-  for (const candidate of unique.slice(0, 10)) { // Max 10 evaluations per day
-    console.log(`[X-Factor Hunter] Evaluating: ${candidate.url}`);
+  for (const candidate of unique.slice(0, 40)) { // Increase candidate pool to 40
+    console.log(`[X-Factor Hunter] Sifting: ${candidate.title.substring(0, 40)}...`);
 
-    // First try snippet text (fast) — if too short, deep fetch via Jina
-    let postText = candidate.snippet;
-    if (postText.length < 200) {
-      postText = await fetchPostContent(candidate.url);
+    // Step 1: Rapid Pre-Filter (Snippet only)
+    const vibeScore = await preFilterPost(candidate.title, candidate.snippet);
+    if (vibeScore < 6) {
+      console.log(`[X-Factor Hunter] 💨 Skipping low-vibe candidate (${vibeScore}/10)`);
+      continue;
     }
-    if (postText.length < 50) continue;
+
+    console.log(`[X-Factor Hunter] ✨ Candidate passed pre-filter (${vibeScore}/10). Fetching deep content...`);
+
+    // Step 2: Deep Fetch via Jina
+    const postText = await fetchPostContent(candidate.url);
+    if (postText.length < 200) continue;
+
 
     // Score with Claude
     const score = await scorePostWithClaude(postText, candidate.url);
