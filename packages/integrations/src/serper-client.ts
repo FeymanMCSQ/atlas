@@ -63,7 +63,8 @@ export async function searchGoogleNews(query: string): Promise<any[]> {
   return data.news || [];
 }
 
-export async function searchGoogle(query: string, num = 10): Promise<any[]> {
+export async function searchGoogle(query: string, num = 10, tbs?: string): Promise<any[]> {
+
   const SERPER_API_KEY = process.env.SERPER_KEY;
   if (!SERPER_API_KEY) {
     throw new Error('Missing SERPER_KEY in environment variables.');
@@ -75,7 +76,8 @@ export async function searchGoogle(query: string, num = 10): Promise<any[]> {
       'X-API-KEY': SERPER_API_KEY,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ q: query, num })
+    body: JSON.stringify({ q: query, num, tbs })
+
   });
 
   if (!response.ok) {

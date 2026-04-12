@@ -38,10 +38,11 @@ async function generateHunterQueries(): Promise<string[]> {
       }),
       prompt: `
         You are an elite, edgy viral growth engineer on X and LinkedIn.
-        Your goal is to generate 5 highly specific Google Search "dorks" to find STRUCTURALLY BRILLIANT LinkedIn posts.
+        Your goal is to generate 5 highly specific Google Search "dorks" to find STRUCTURALLY BRILLIANT LinkedIn posts from 2025 and 2026.
         
         Focus on finding posts where the formatting is deliberate (short breaks, numbered lists, contrarian openings).
-        Don't just look for "success", look for "frameworks" and "raw insights".
+        Look for NEW frameworks that are currently blowing up in the AI/SaaS space.
+
         
         Examples of style:
         - site:linkedin.com/posts/ "the hard truth about" founder
@@ -66,8 +67,10 @@ async function generateHunterQueries(): Promise<string[]> {
 
 async function searchLinkedInPosts(query: string): Promise<{ url: string; title: string; snippet: string }[]> {
   try {
-    const organic = await searchGoogle(query, 15);
+    const organic = await searchGoogle(query, 15, "qdr:y"); // Past year filter
     return organic
+
+
       .filter((r: any) => r.link && r.link.includes('linkedin.com'))
       .map((r: any) => ({
         url: r.link,
