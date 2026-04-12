@@ -138,7 +138,7 @@ async function preFilterPost(title: string, snippet: string): Promise<number> {
 
 
 
-async function scorePostWithClaude(postText: string, url: string): Promise<{ score: number; hookArchetype: string; whyItHelps: string } | null> {
+async function scorePostWithGrok(postText: string, url: string): Promise<{ score: number; hookArchetype: string; whyItHelps: string } | null> {
   const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
   if (!OPENROUTER_API_KEY) return null;
 
@@ -150,33 +150,53 @@ async function scorePostWithClaude(postText: string, url: string): Promise<{ sco
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-opus-4.6',
+        model: 'x-ai/grok-4.1-fast',
         messages: [
           {
             role: 'system',
-            content: 'You are a marketing psychologist API. You output ONLY raw JSON that conforms strictly to the provided schema. No conversational filler, no markdown, no backticks.'
+            content: `You are a high-speed viral growth engineer and structural deconstructionist. 
+            You excel at identifying "Gold Standard" social media templates that convert.
+            
+            GOLD STANDARD EXAMPLES (10/10):
+            
+            Example A (The Contrarian List):
+            "3 things everyone gets wrong about [X].
+            1. [Surprising point]
+            2. [Counter-intuitive point]
+            3. [The real truth]
+            Stop doing [Common mistake]. Start doing [X]."
+            
+            Example B (The Growth Loop):
+            "I used to think [Popular cliche].
+            Then I [Failure/Action].
+            Result: [Massive Benefit].
+            Here is the 3-step routine I use now:
+            - Step 1: ...
+            - Step 2: ...
+            - Step 3: ...
+            [Actionable prompt]."
+            
+            You output ONLY raw JSON that strictly conforms to the provided schema. No conversational filler.`
           },
           {
             role: 'user',
-            content: `Analyze this post for its STRUCTURAL GOLD / REUSABLE PATTERNS. 
+            content: `Analyze this post for its STRUCTURAL GOLD / REUSABLE PATTERN. 
             
-            Focus on the CADENCE and FORMATTING. Is this a template we can reuse for B2B founder content?
+            Focus on the VISUAL RHYTHM (white space) and CADENCE. Is this a template we can reuse for B2B founder content?
             
-            Scoring Criteria (10pts total):
-            1. Hook Strength (0-3pts): Irresistible contrarian tension or open loop.
+            Scoring Rubric (10pts total):
+            1. Hook Strength (0-3pts): Irresistible contrarian tension or open loop in line 1.
             2. Visual Rhythm (0-3pts): Does it use white space and short sentences to force reading?
-            3. Engagement Logic (0-2pts): Specific structural rhythm (e.g. List -> Insight -> Ask).
-            4. Reach Independence (0-2pts): Works because of the structure, not the author's fame.
+            3. Engagement Logic (0-2pts): Specific rhythmic pattern (e.g. List -> Insight -> Ask).
+            4. Reach Independence (0-2pts): Works because of the structure, not the author's personality.
             
             Note: Be generous with 7+ scores if the layout is mathematically perfect for B2B LinkedIn.
             
             Post to score:
             """
-            ${postText.substring(0, 1500)}
+            ${postText.substring(0, 3000)}
             """`
-
           }
-
         ],
         response_format: {
           type: 'json_schema',
@@ -200,21 +220,22 @@ async function scorePostWithClaude(postText: string, url: string): Promise<{ sco
 
     if (!response.ok) {
         const errorText = await response.text();
-        console.error(`[X-Factor Hunter] Claude API error (${response.status}): ${errorText}`);
+        console.error(`[X-Factor Hunter] Grok API error (${response.status}): ${errorText}`);
         return null;
     }
     const data = await response.json();
     const raw = data.choices?.[0]?.message?.content;
     if (!raw) {
-        console.error(`[X-Factor Hunter] Claude returned empty response`);
+        console.error(`[X-Factor Hunter] Grok returned empty response`);
         return null;
     }
     return JSON.parse(raw);
   } catch (e: any) {
-    console.error(`[X-Factor Hunter] Claude scoring exception: ${e.message}`);
+    console.error(`[X-Factor Hunter] Grok scoring exception: ${e.message}`);
     return null;
   }
 }
+
 
 
 
@@ -293,8 +314,9 @@ export async function runXFactorHunt() {
     if (postText.length < 200) continue;
 
 
-    // Score with Claude
-    const score = await scorePostWithClaude(postText, candidate.url);
+    // Score with Grok
+    const score = await scorePostWithGrok(postText, candidate.url);
+
     if (!score) continue;
 
     console.log(`[X-Factor Hunter] Score: ${score.score}/10 | ${candidate.url}`);
