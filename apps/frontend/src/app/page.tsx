@@ -4,7 +4,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import styles from './page.module.css';
 
 // Type declarations mapping our internal domain
-type Feed = { id: string; name: string; url: string; isActive: boolean };
+type Feed = { id: string; name: string; url: string; isActive: boolean; category: string };
+
 type Signal = { id: string; source: string; title: string; url: string; summary: string; imageUrl?: string };
 type Draft = { id: string; contentItemId: string; platform: string; body: string; status: string; mediaUrl?: string };
 
@@ -102,6 +103,22 @@ export default function AtlasDashboard() {
   const deselectAllFeeds = () => {
     setSelectedFeeds(new Set());
   };
+
+  const toggleCategory = (category: string) => {
+    const categoryFeedIds = feeds.filter(f => f.category === category).map(f => f.id);
+    const allSelected = categoryFeedIds.every(id => selectedFeeds.has(id));
+    
+    setSelectedFeeds(prev => {
+      const next = new Set(prev);
+      if (allSelected) {
+        categoryFeedIds.forEach(id => next.delete(id));
+      } else {
+        categoryFeedIds.forEach(id => next.add(id));
+      }
+      return next;
+    });
+  };
+
 
   const synthesizeSignal = async (signalId: string, mode: string) => {
     setProcessing(prev => ({ ...prev, [signalId]: true }));
@@ -273,25 +290,46 @@ export default function AtlasDashboard() {
         </div>
       </header>
 
-      {/* Top Section: RSS Menu */}
-      <section className={styles.ribbon}>
-        {feeds.length > 0 && (
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginRight: '1rem', paddingRight: '1rem', borderRight: '1px solid var(--glass-border)' }}>
-            <button className={`${styles.chip} ${styles.chipAction}`} onClick={selectAllFeeds}>Select All</button>
-            <button className={`${styles.chip} ${styles.chipAction}`} onClick={deselectAllFeeds}>Deselect All</button>
-          </div>
-        )}
-        {feeds.map(feed => (
-          <div 
-            key={feed.id}
-            className={`${styles.chip} ${selectedFeeds.has(feed.id) ? styles.chipActive : ''}`}
-            onClick={() => toggleFeed(feed.id)}
-          >
-            {feed.name}
-          </div>
-        ))}
-        {feeds.length === 0 && <div className={styles.chip}>Loading Network...</div>}
+      {/* Top Section: Categorized Ingestion Ribbon */}
+      <section className={styles.ribbonWrapper}>
+        <div className={styles.ribbonGlobalActions}>
+          <button className={styles.btnGlobal} onClick={selectAllFeeds}>Select All</button>
+          <button className={styles.btnGlobal} onClick={deselectAllFeeds}>Deselect All</button>
+        </div>
+
+        {['Engineering', 'Founder Mode', 'GTM & Marketing', 'Strategy'].map(cat => {
+            const catFeeds = feeds.filter(f => f.category === cat);
+            if (catFeeds.length === 0) return null;
+            const allSelected = catFeeds.every(f => selectedFeeds.has(f.id));
+
+            return (
+              <div key={cat} className={styles.ribbonCategory}>
+                <div className={styles.categoryHeader}>
+                  <span className={styles.categoryLabel}>{cat}</span>
+                  <button 
+                    className={styles.categoryToggle} 
+                    onClick={() => toggleCategory(cat)}
+                  >
+                    {allSelected ? 'None' : 'All'}
+                  </button>
+                </div>
+                <div className={styles.categoryChips}>
+                  {catFeeds.map(feed => (
+                    <div 
+                      key={feed.id}
+                      className={`${styles.chip} ${selectedFeeds.has(feed.id) ? styles.chipActive : ''}`}
+                      onClick={() => toggleFeed(feed.id)}
+                    >
+                      {feed.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+        })}
+        {feeds.length === 0 && <div className={styles.chip}>Syncing Neural Grid...</div>}
       </section>
+
 
       {/* Middle Section: Display Grip */}
       <section className={styles.grid}>

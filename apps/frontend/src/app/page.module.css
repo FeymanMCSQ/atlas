@@ -60,16 +60,89 @@
   text-transform: uppercase;
 }
 
-/* Ribbon */
-.ribbon {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-start;
-  flex-wrap: wrap;
+/* Ribbon & Categorization */
+.ribbonWrapper {
   margin-bottom: 4rem;
-  padding-bottom: 2rem;
+  padding: 1.5rem;
+  border: 1px solid var(--glass-border);
+  background: var(--surface-hover);
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.ribbonGlobalActions {
+  display: flex;
+  gap: 0.5rem;
+  padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--glass-border);
 }
+
+.btnGlobal {
+  background: transparent;
+  border: 1px solid var(--text-secondary);
+  color: var(--text-secondary);
+  padding: 0.4rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnGlobal:hover {
+  background: var(--text-primary);
+  color: var(--bg-color);
+  border-color: var(--text-primary);
+}
+
+.ribbonCategory {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.categoryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.categoryLabel {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-primary);
+  opacity: 0.8;
+}
+
+.categoryToggle {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  text-decoration: underline;
+  opacity: 0.6;
+}
+
+.categoryToggle:hover {
+  opacity: 1;
+  color: var(--text-primary);
+}
+
+.categoryChips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 
 .chip {
   background: transparent;

@@ -23,42 +23,55 @@ import { discoverTrendingNews, performHyperDiscovery } from "./discovery.js";
 // ---------------------------------------------------------------------------
 const CORE_FEEDS = [
   // -----------------------------------------------------------------------
-  // Tech News & Engineering (Information Mode)
+  // Engineering (Tech News & Architecture)
   // -----------------------------------------------------------------------
-  { name: 'Netflix TechBlog', url: 'https://netflixtechblog.com/feed' },
-  { name: 'CNCF Blog', url: 'https://www.cncf.io/blog/feed/' },
-  { name: 'Uber Engineering', url: 'https://www.uber.com/en-US/blog/engineering/rss/' },
-  { name: 'Lennys Newsletter', url: 'https://www.lennysnewsletter.com/feed' },
-  { name: 'GitHub Blog', url: 'https://github.blog/feed/' },
-  { name: 'Google Research AI', url: 'https://research.google/blog/rss/' },
-  { name: 'Microsoft Dev Hub', url: 'https://devblogs.microsoft.com/feed/' },
-  { name: 'AWS News Blog', url: 'https://aws.amazon.com/blogs/aws/feed/' },
-  { name: 'The Pragmatic Engineer', url: 'https://blog.pragmaticengineer.com/rss/' },
-  { name: 'First Round Review', url: 'https://review.firstround.com/glossary/rss/' },
-  { name: 'YC Blog', url: 'https://blog.ycombinator.com/feed/' },
-  { name: 'Paul Graham Essays', url: 'https://raw.githubusercontent.com/leontloveless/ai-rss-feeds/main/feeds/paul-graham.xml' },
-  { name: 'Farnam Street', url: 'https://fs.blog/feed/' },
-  { name: 'CTO Craft', url: 'https://ctocraft.com/feed/' },
-  { name: 'Hacker News', url: 'https://news.ycombinator.com/rss' },
-  { name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml' },
-  { name: 'DigitalOcean Blog', url: 'https://www.digitalocean.com/blog/rss/' },
-  { name: 'PostHog', url: 'https://posthog.com/rss.xml' },
-  { name: 'HashiCorp Blog', url: 'https://www.hashicorp.com/blog/feed.xml' },
+  { name: 'Netflix TechBlog', url: 'https://netflixtechblog.com/feed', category: 'Engineering' },
+  { name: 'CNCF Blog', url: 'https://www.cncf.io/blog/feed/', category: 'Engineering' },
+  { name: 'Uber Engineering', url: 'https://www.uber.com/en-US/blog/engineering/rss/', category: 'Engineering' },
+  { name: 'GitHub Blog', url: 'https://github.blog/feed/', category: 'Engineering' },
+  { name: 'Google Research AI', url: 'https://research.google/blog/rss/', category: 'Engineering' },
+  { name: 'Microsoft Dev Hub', url: 'https://devblogs.microsoft.com/feed/', category: 'Engineering' },
+  { name: 'AWS News Blog', url: 'https://aws.amazon.com/blogs/aws/feed/', category: 'Engineering' },
+  { name: 'The Pragmatic Engineer', url: 'https://blog.pragmaticengineer.com/rss/', category: 'Engineering' },
+  { name: 'CTO Craft', url: 'https://ctocraft.com/feed/', category: 'Engineering' },
+  { name: 'Hacker News', url: 'https://news.ycombinator.com/rss', category: 'Engineering' },
+  { name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml', category: 'Engineering' },
+  { name: 'DigitalOcean Blog', url: 'https://www.digitalocean.com/blog/rss/', category: 'Engineering' },
+  { name: 'PostHog', url: 'https://posthog.com/rss.xml', category: 'Engineering' },
+  { name: 'HashiCorp Blog', url: 'https://www.hashicorp.com/blog/feed.xml', category: 'Engineering' },
 
   // -----------------------------------------------------------------------
-  // Founder Journeys & Lessons (Founder Mode Fuel)
-  // High-density personal essays, bootstrapper stories & entrepreneurship insights.
-  // Infrequent cadence but rich content — ideal for Founder Mode synthesis.
+  // Founder Mode (Personal Essays & Entrepreneurship)
   // -----------------------------------------------------------------------
-  { name: 'Justin Jackson (Transistor)', url: 'https://justinjackson.ca/feed' },
-  { name: 'Pieter Levels (Nomad List)', url: 'https://levels.io/feed/' },
-  { name: 'Seth Godin', url: 'https://seths.blog/feed/' },
-  { name: 'Nathan Barry (ConvertKit)', url: 'https://nathanbarry.com/feed/' },
-  { name: 'A Smart Bear (Jason Cohen)', url: 'https://blog.asmartbear.com/feed/' },
-  { name: 'Startups For the Rest of Us', url: 'https://www.startupsfortherestofus.com/feed' },
-  { name: 'Indie Hackers', url: 'https://www.indiehackers.com/feed' },
-  { name: 'Nate Liason', url: 'https://blog.nateliason.com/feed' },
+  { name: 'Lennys Newsletter', url: 'https://www.lennysnewsletter.com/feed', category: 'Founder Mode' },
+  { name: 'Paul Graham Essays', url: 'https://raw.githubusercontent.com/leontloveless/ai-rss-feeds/main/feeds/paul-gram.xml', category: 'Founder Mode' },
+  { name: 'Justin Jackson (Transistor)', url: 'https://justinjackson.ca/feed', category: 'Founder Mode' },
+  { name: 'Pieter Levels (Nomad List)', url: 'https://levels.io/feed/', category: 'Founder Mode' },
+  { name: 'Seth Godin', url: 'https://seths.blog/feed/', category: 'Founder Mode' },
+  { name: 'Nathan Barry (ConvertKit)', url: 'https://nathanbarry.com/feed/', category: 'Founder Mode' },
+  { name: 'A Smart Bear (Jason Cohen)', url: 'https://blog.asmartbear.com/feed/', category: 'Founder Mode' },
+  { name: 'Farnam Street', url: 'https://fs.blog/feed/', category: 'Founder Mode' },
+  { name: 'Startups For the Rest of Us', url: 'https://www.startupsfortherestofus.com/feed', category: 'Founder Mode' },
+  { name: 'Indie Hackers', url: 'https://www.indiehackers.com/feed', category: 'Founder Mode' },
+  { name: 'Nate Liason', url: 'https://blog.nateliason.com/feed', category: 'Founder Mode' },
+
+  // -----------------------------------------------------------------------
+  // GTM & Marketing (Sales, Growth, Scaling)
+  // -----------------------------------------------------------------------
+  { name: 'SaaStr', url: 'https://www.saastr.com/feed', category: 'GTM & Marketing' },
+  { name: 'Close.com', url: 'https://blog.close.com/rss/', category: 'GTM & Marketing' },
+  { name: 'Ahrefs', url: 'https://ahrefs.com/blog/feed/', category: 'GTM & Marketing' },
+  { name: 'Demand Curve', url: 'https://www.demandcurve.com/feed', category: 'GTM & Marketing' },
+  { name: 'Growth Unhinged', url: 'https://www.growthunhinged.com/feed', category: 'GTM & Marketing' },
+
+  // -----------------------------------------------------------------------
+  // Strategy (High-level Business Decision Making)
+  // -----------------------------------------------------------------------
+  { name: 'Tomasz Tunguz', url: 'https://tomtunguz.com/index.xml', category: 'Strategy' },
+  { name: 'YC Blog', url: 'https://blog.ycombinator.com/feed/', category: 'Strategy' },
+  { name: 'First Round Review', url: 'https://review.firstround.com/glossary/rss/', category: 'Strategy' },
 ];
+
 
 // ---------------------------------------------------------------------------
 // Custom XML fetcher — fetches the raw XML ourselves using Node's built-in
@@ -124,13 +137,23 @@ async function processFeeds(): Promise<void> {
   const coreUrls = CORE_FEEDS.map(f => f.url);
   
   console.log(`[Feed Ingestor] Syncing ${CORE_FEEDS.length} system feeds...`);
-  for (const feed of CORE_FEEDS) {
+  for (const feed of (CORE_FEEDS as any[])) {
     await db.feedSource.upsert({ 
       where: { url: feed.url }, 
-      create: { name: feed.name, url: feed.url, isActive: true },
-      update: { name: feed.name, isActive: true } 
+      create: { 
+        name: feed.name, 
+        url: feed.url, 
+        category: feed.category,
+        isActive: true 
+      },
+      update: { 
+        name: feed.name, 
+        category: feed.category,
+        isActive: true 
+      } 
     });
   }
+
 
   // Deactivate any feeds NOT in the canonical list (removes legacy duplicates)
   await db.feedSource.updateMany({
