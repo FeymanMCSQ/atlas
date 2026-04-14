@@ -134,10 +134,10 @@ export const InformationPrompts = {
     
     Write 3 distinct hooks for this topic. 
     CRITICAL RULES:
-    1. Hook MUST include the main subject of the input.
+    1. Hook MUST explicitly state the high-profile company (e.g., Anthropic, OpenAI) and the core news fact. Do not hide the news behind a vague philosophical opening.
     2. DO NOT use clickbait sirens (🚨) or forced shock-value.
-    3. Speak naturally. Less than 15 words.
-    Example: "Anthropic just released a fascinating new model." or "I was looking at the new Google health metrics..."
+    3. Speak naturally but directly. Less than 15 words.
+    Example: "Anthropic is supposedly building its own AI chips." or "Google just updated its search algorithm for SaaS."
     
     Insight/News:
     {{insight}}
@@ -149,12 +149,15 @@ export const InformationPrompts = {
     
     Write two versions of a social post using this hook and the extracted facts: one for X (Twitter) and one for LinkedIn.
     
+    CRITICAL ARCHITECTURE MANDATE (News-First, Philosophy-Second):
+    You MUST explicitly name the primary company (e.g., Anthropic) and state exactly what happened in the very first sentence. NEVER abstract the news away into a philosophical rant without first grounding the reader in the hard facts of the event.
+    
     RULES for BOTH platforms:
-    1. Structure: Simply and clearly explain the topic as if speaking to a colleague. DO NOT use rigid templates or forced bullet-point lists with emojis.
+    1. Structure: Start directly with the factual news. Then, smoothly transition into the conversational takeaway or insight. DO NOT use rigid templates or forced bullet-point lists with emojis.
     2. Do NOT use generic AI words (No "In today's fast-paced landscape", "Delve", "Navigate", "Tapestry").
-    3. Write like a human talking to another human. Use natural paragraphs. DO NOT try to "sound smart" with complex buzzwords.
-    4. X (Twitter): Keep it brief and focused.
-    5. LinkedIn: Expand slightly on the context, but maintain the casual, non-corporate tone.
+    3. Write like a human talking to another human. Use natural paragraphs. DO NOT try to "sound smart" with complex buzzwords or endless philosophizing.
+    4. X (Twitter): Keep it brief and focused on the facts and one core insight.
+    5. LinkedIn: Expand slightly on the context, but maintain the casual, non-corporate, news-driven tone.
     
     Hook: {{hook}}
     Insight: {{insight}}
@@ -163,9 +166,10 @@ export const InformationPrompts = {
   // Stage 5: Quality critique
   EVALUATE_DRAFT: `
     Act as a discerning editor evaluating this post.
-    1. Did it use generic AI words or corporate jargon? (Fail immediately if it uses "moreover", "delve", "navigate", "landscape").
-    2. Does it feel like a human wrote it with natural conversational flow, or does it sound like a fake tech influencer trying to sound important? (Fail if it sounds like an influencer).
-    3. Did it unnecessarily use rigid bullet points or emojis when natural text would be better?
+    1. Did it fail to state the main company name and hard news facts in the very first sentence? (Fail immediately if it starts by "yapping" about a philosophy before stating the news).
+    2. Did it use generic AI words or corporate jargon? (Fail immediately if it uses "moreover", "delve", "navigate", "landscape").
+    3. Does it feel like a human wrote it with natural conversational flow, or does it sound like a fake tech influencer trying to sound important? (Fail if it sounds like an influencer).
+    4. Did it unnecessarily use rigid bullet points or emojis when natural text would be better?
     
     Score from 1-10 and list flaws.
     Draft:
