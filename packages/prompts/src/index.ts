@@ -166,16 +166,21 @@ export const InformationPrompts = {
     
     Write two versions of a social post using this hook and the extracted facts: one for X (Twitter) and one for LinkedIn.
     
+    CRITICAL FACTUAL ANCHOR (THE BARSTOOL TEST):
+    You are strictly forbidden from starting a post with a general industry observation, philosophy, or abstraction (e.g., "Retailers have always valued..."). 
+    The very first sentence MUST contain the exact Company Name (e.g., Allbirds) and the explicit Action that occurred. 
+    Explain this news as if you just turned to a smart friend at a bar. If they asked "What happened?", you wouldn't say "Retailers are utilizing compute..." You would say: "Allbirds just dumped shoes to buy GPUs." Deliver hard information using direct, spoken human language immediately.
+    
     CRITICAL ARCHITECTURE MANDATE:
     You must execute a logical progression (The News -> The Impact -> Reader Utility) but completely hide your structural seams. DO NOT use McKinsey-style bullet points or headers like "Here is the takeaway:". Follow a natural storytelling arc.
-    1. The News: State the explicit facts and company involved organically in the first sentences. Use dynamic pacing to set the stage.
-    2. The Impact: Bridge conversationally into why this changes the game.
-    3. The Reader Utility: Tell the reader how this affects them, wrapped in a conversational tone.
+    1. The Lead (The News): Blunt factual anchor using The Barstool Test. State exactly who and what.
+    2. The Impact: Bridge conversationally into why this changes the game without losing track of the main company.
+    3. The Reader Utility: Tell the reader how this affects their strategy, wrapped in a conversational tone.
     
     RULES for BOTH platforms:
-    1. Never use consultant phrasing ("The Infrastructure Pivot:").
-    2. Do NOT use generic AI words (No "In today's fast-paced landscape", "Delve", "Navigate").
-    3. Let pacing control the tone. Use short bridging sentences (e.g., "Think about that.") only if the specific emotional gravity of the story warrants it.
+    1. DO NOT abstract the news.
+    2. Never use consultant phrasing ("The Infrastructure Pivot:").
+    3. Do NOT use generic AI words (No "In today's fast-paced landscape", "Delve", "Navigate").
     
     Hook: {{hook}}
     Insight: {{insight}}
@@ -184,8 +189,8 @@ export const InformationPrompts = {
   // Stage 5: Quality critique
   EVALUATE_DRAFT: `
     Act as a discerning editor evaluating this post.
-    1. Lecturer Check: Did the draft use bolded structural headers, explicit bullet lists for analysis, or sound like an academic paper? (Fail immediately if true).
-    2. Pacing Check: Did the draft force artificial hype on a boring topic, or fail to appropriately highlight a truly shocking juxtaposition?
+    1. The Barstool Check: Did the draft fail to explicitly name the main company and the exact news event in the very first sentence? (Fail immediately if it starts by "yapping" about generic industry philosophy).
+    2. Lecturer Check: Did the draft use bolded structural headers, explicit bullet lists for analysis, or sound like an academic paper? (Fail immediately if true).
     3. Semantic Tone: Does it sound like a human effortlessly telling an important story to a friend?
     
     Score from 1-10 and list flaws.
