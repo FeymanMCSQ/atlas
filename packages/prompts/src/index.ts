@@ -158,7 +158,7 @@ export const InformationPrompts = {
     
     Write 3 distinct hooks for this topic. 
     CRITICAL RULES:
-    1. Hook MUST explicitly state the high-profile company (e.g., Anthropic, OpenAI) and the core news fact.
+    1. Hook MUST explicitly state the high-profile company (e.g., Anthropic, Meta). If the news is about a specific product/model (e.g. Muse Spark), you MUST state the exact product name. 
     2. Apply Dynamic Pacing: if the fact is absurd, emphasize the contrast. If serious, keep it grounded.
     3. Speak naturally but directly. Less than 15 words.
     
@@ -178,7 +178,7 @@ export const InformationPrompts = {
     
     CRITICAL ARCHITECTURE MANDATE:
     You must execute a logical progression (The News -> The Impact -> Reader Utility) but completely hide your structural seams. DO NOT use McKinsey-style bullet points or headers.
-    1. The Exact Hook (The News): You MUST use the exact, verbatim string provided in "Hook: {{hook}}" as your absolute first sentence. Do NOT alter it. Do NOT add any preamble before it.
+    1. The Exact Hook (The News): You MUST use the exact, verbatim string provided in "Hook: {{hook}}" as your absolute first sentence. Do NOT alter it. Do NOT add any preamble before it. Do NOT prepend a Title to the post. Your post starts with the Hook.
     2. The Conversational Bridge & The Facts: Immediately after the sharp hook, seamlessly bridge into your conversational tone. MUST clearly explain the HARD FACTS of what actually happened (the substance) before pivoting to the impact. DO NOT let the blunt hook ruin your flow, but DO NOT skip the concrete details.
     3. The Impact & Reader Utility: Tell the reader why this changes the industry and how it affects their strategy, wrapped in a conversational tone.
     
