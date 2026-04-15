@@ -53,8 +53,8 @@ const EvalSchema = z.object({
   flaws: z.array(z.string()).describe("A list of explicit flaws referencing the negative tone/structure traits.")
 });
 
-const ImageHeadlineSchema = z.object({
-  headline: z.string().describe("A hyper-condensed 4 to 7 word news headline representing the core insight.")
+const ImageConceptSchema = z.object({
+  visualConcept: z.string().describe("A vivid description of a clever, metaphorical visual setup without any text, words, or letters used.")
 });
 
 /**
@@ -237,19 +237,22 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
     let finalMediaUrl: string | undefined = undefined;
     if (process.env.FAL_KEY) {
       try {
-        if (item.mode === 'FOUNDER') {
-          const imagePrompt = `A minimalist, high-contrast tech brain dump... ${frameObj.insight}`;
-          finalMediaUrl = await generateImageWithFlux(imagePrompt);
-        } else {
-          const { object: imageTextObj } = await generateObject({
-             model: provider(targetModel),
-             schema: ImageHeadlineSchema,
-             prompt: `Distill news insight into 4-7 words: ${frameObj.insight}`,
-          });
-          finalMediaUrl = await generateImageWithFlux(`Minimalist tech news plate: "${imageTextObj.headline}"`);
-        }
+        console.log(`[Content Brain] 🎨 Initiating Art Director for Visual Concept...`);
+        const { object: imageConceptObj } = await generateObject({
+          model: provider(targetModel),
+          schema: ImageConceptSchema,
+          prompt: `You are a brilliant Art Director for a top-tier business magazine. 
+          Your job is to read this insight: "${frameObj.insight}".
+          Design a clever, metaphorical visual scene that represents this idea without using any text, letters, or spelling. 
+          For example, if the insight is about a shoe company abandoning retail for AI compute, the concept might be "A fluffy wool sneaker plugged directly into a massive, glowing Nvidia server rack."
+          Describe the visual scene vividly. Do NOT include any text or speech bubbles.`,
+        });
+
+        const fluxPrompt = `A minimalist, clever single-panel editorial cartoon illustration. Flat, vibrant colors, vector art style. CRITICAL: No text, no words, no letters, no speech bubbles. Concept: ${imageConceptObj.visualConcept}`;
+        
+        finalMediaUrl = await generateImageWithFlux(fluxPrompt);
       } catch (mediaErr) {
-        // Silently ignore media errors
+        console.error(`[Content Brain] ⚠️ Media generation failed. Proceeding without visual attachment.`);
       }
     }
 
