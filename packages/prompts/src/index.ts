@@ -76,8 +76,8 @@ export const FounderPrompts = {
     
     CRITICAL ARCHITECTURE MANDATE:
     You must execute a progression (Hook -> Method -> Benefit) but hide the seams. Weave these elements naturally into conversational paragraphs.
-    1. The Hook: Grab attention conversationally.
-    2. The Method: Explain exactly *why* you do something a specific way or the core lesson learned. Let the story drive the point.
+    1. The Exact Hook: You MUST use the exact, verbatim string provided in "Hook: {{hook}}" as your absolute first sentence. Do NOT add any preamble before it (e.g. "I was just thinking..."). 
+    2. The Conversational Bridge: Immediately after dropping the hook, seamlessly bridge into your highly successful, conversational, human tone. DO NOT let the punchy hook ruin your conversational storytelling. Let the story drive the point.
     3. The Benefit: Seamlessly deliver the utility to the reader.
     
     RULES for BOTH platforms:
@@ -92,9 +92,10 @@ export const FounderPrompts = {
   EVALUATE_DRAFT: `
     Act as a highly sensitive tone-editor evaluating this draft.
     Critique it against these rules:
-    1. Formatting Check: Are there rigid sub-headers, bolded titles, or consultant-speak formats? (Fail immediately if true).
-    2. Value Check: Does it fail to provide clear utility to the reader without being overly academic?
-    3. Tone Overfitting: Did the AI force fake hype, "crazy right?" phrases inappropriately, or over-dramatize a mundane point?
+    1. Hook Check: Did the draft add conversational filler (like "I've been thinking about...") *before* the main hook? (Fail immediately if true).
+    2. Formatting Check: Are there rigid sub-headers, bolded titles, or consultant-speak formats? (Fail immediately if true).
+    3. Value Check: Does it fail to provide clear utility to the reader without being overly academic?
+    4. Tone Check: After the hook, did the draft lose its calm conversational tone and become too stiff or hyped?
     
     Score the draft from 1-10 and list specific flaws.
     Draft:
@@ -166,16 +167,14 @@ export const InformationPrompts = {
     
     Write two versions of a social post using this hook and the extracted facts: one for X (Twitter) and one for LinkedIn.
     
-    CRITICAL FACTUAL ANCHOR (THE BARSTOOL TEST):
-    You are strictly forbidden from starting a post with a general industry observation, philosophy, or abstraction (e.g., "Retailers have always valued..."). 
-    The very first sentence MUST contain the exact Company Name (e.g., Allbirds) and the explicit Action that occurred. 
-    Explain this news as if you just turned to a smart friend at a bar. If they asked "What happened?", you wouldn't say "Retailers are utilizing compute..." You would say: "Allbirds just dumped shoes to buy GPUs." Deliver hard information using direct, spoken human language immediately.
+    CRITICAL FACTUAL ANCHOR:
+    You are strictly forbidden from starting a post with a general industry observation, philosophy, or conversational preamble (e.g., "I've been watching the news about..."). 
     
     CRITICAL ARCHITECTURE MANDATE:
-    You must execute a logical progression (The News -> The Impact -> Reader Utility) but completely hide your structural seams. DO NOT use McKinsey-style bullet points or headers like "Here is the takeaway:". Follow a natural storytelling arc.
-    1. The Lead (The News): Blunt factual anchor using The Barstool Test. State exactly who and what.
-    2. The Impact: Bridge conversationally into why this changes the game without losing track of the main company.
-    3. The Reader Utility: Tell the reader how this affects their strategy, wrapped in a conversational tone.
+    You must execute a logical progression (The News -> The Impact -> Reader Utility) but completely hide your structural seams. DO NOT use McKinsey-style bullet points or headers.
+    1. The Exact Hook (The News): You MUST use the exact, verbatim string provided in "Hook: {{hook}}" as your absolute first sentence. Do NOT alter it. Do NOT add any preamble before it.
+    2. The Conversational Bridge & The Facts: Immediately after the sharp hook, seamlessly bridge into your conversational tone. MUST clearly explain the HARD FACTS of what actually happened (the substance) before pivoting to the impact. DO NOT let the blunt hook ruin your flow, but DO NOT skip the concrete details.
+    3. The Impact & Reader Utility: Tell the reader why this changes the industry and how it affects their strategy, wrapped in a conversational tone.
     
     RULES for BOTH platforms:
     1. DO NOT abstract the news.
@@ -189,9 +188,9 @@ export const InformationPrompts = {
   // Stage 5: Quality critique
   EVALUATE_DRAFT: `
     Act as a discerning editor evaluating this post.
-    1. The Barstool Check: Did the draft fail to explicitly name the main company and the exact news event in the very first sentence? (Fail immediately if it starts by "yapping" about generic industry philosophy).
+    1. The Hook Erasure Check: Did the draft add conversational filler ("I've been watching the news...") *before* stating the sharp factual hook/lead? (Fail immediately if true).
     2. Lecturer Check: Did the draft use bolded structural headers, explicit bullet lists for analysis, or sound like an academic paper? (Fail immediately if true).
-    3. Semantic Tone: Does it sound like a human effortlessly telling an important story to a friend?
+    3. Semantic Tone: After the sharp hook, does it immediately bridge into a human effortlessly telling an important story to a friend? (Fail if it loses its conversational, peer-to-peer flow).
     
     Score from 1-10 and list flaws.
     Draft:
