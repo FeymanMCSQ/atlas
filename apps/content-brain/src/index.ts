@@ -181,7 +181,8 @@ async function processDraftPipeline(payload: ContentDraftRequestedPayload) {
 
     let draftPrompt = Prompts.GENERATE_DRAFT
       .replace('{{hook}}', selectedHook)
-      .replace('{{insight}}', frameObj.insight);
+      .replace('{{insight}}', frameObj.insight)
+      .replace('{{signals}}', signalsObj.signals.join('\\n'));
 
     // [STEP 2] Check availability and select 
     console.log(`[Resonance Circuit] Step 2: Evaluating template mapping...`);

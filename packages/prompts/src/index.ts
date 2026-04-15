@@ -15,6 +15,9 @@ DYNAMIC PACING MANDATE (ANTI-OVERFITTING):
 Do not force artificial hype if the news does not warrant it. Let the specific story dictate the emotional tone.
 - If the news is wildly surprising/absurd (e.g., a shoe company building an AI data center), lean into the shock value and structural juxtaposition. Use short sentences and disbelief.
 - If the news is a steady, serious update (e.g., a company changing its pricing tier), use a grounded, analytical, but highly conversational peer-to-peer tone.
+
+THE IMMUTABLE PROPER NOUN RULE:
+You are strictly forbidden from abstracting away product names, specific models (e.g. Muse Spark, GPT-4), company names, or exact numbers provided. You MUST use the exact proper nouns provided in the Raw Facts. You cannot rename or generalize them (e.g., do not say "a new model", say the exact name).
 `;
 
 const FOUNDER_PERSONA = `
@@ -86,6 +89,8 @@ export const FounderPrompts = {
     
     Hook: {{hook}}
     Insight: {{insight}}
+    Raw Facts:
+    {{signals}}
   `,
 
   // Stage 5: Quality critique
@@ -96,6 +101,7 @@ export const FounderPrompts = {
     2. Formatting Check: Are there rigid sub-headers, bolded titles, or consultant-speak formats? (Fail immediately if true).
     3. Value Check: Does it fail to provide clear utility to the reader without being overly academic?
     4. Tone Check: After the hook, did the draft lose its calm conversational tone and become too stiff or hyped?
+    5. Information Loss: Did it abstract away or fail to name the specific product, company, or metrics provided in the raw facts?
     
     Score the draft from 1-10 and list specific flaws.
     Draft:
@@ -183,6 +189,8 @@ export const InformationPrompts = {
     
     Hook: {{hook}}
     Insight: {{insight}}
+    Raw Facts:
+    {{signals}}
   `,
 
   // Stage 5: Quality critique
@@ -191,6 +199,7 @@ export const InformationPrompts = {
     1. The Hook Erasure Check: Did the draft add conversational filler ("I've been watching the news...") *before* stating the sharp factual hook/lead? (Fail immediately if true).
     2. Lecturer Check: Did the draft use bolded structural headers, explicit bullet lists for analysis, or sound like an academic paper? (Fail immediately if true).
     3. Semantic Tone: After the sharp hook, does it immediately bridge into a human effortlessly telling an important story to a friend? (Fail if it loses its conversational, peer-to-peer flow).
+    4. Information Loss: Did it abstract away or fail to use the exact proper nouns (like product names or company names) provided in the raw facts?
     
     Score from 1-10 and list flaws.
     Draft:
