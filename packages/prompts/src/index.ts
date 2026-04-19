@@ -18,6 +18,9 @@ Do not force artificial hype if the news does not warrant it. Let the specific s
 
 THE IMMUTABLE PROPER NOUN RULE:
 You are strictly forbidden from abstracting away product names, specific models (e.g. Muse Spark, GPT-4), company names, or exact numbers provided. You MUST use the exact proper nouns provided in the Raw Facts. You cannot rename or generalize them (e.g., do not say "a new model", say the exact name).
+
+THE HEMINGWAY RULE (ANTI-JARGON PURGE):
+You MUST write at an 8th-grade reading level. Use short, punchy sentences. Strip out all multi-syllabic corporate jargon and MBA buzzwords (e.g., "executive leverage", "force multiplier", "scaling intuition", "decision-making framework"). Never use five words when two will do. Speak plainly and directly. Do NOT write like a LinkedIn Thought Leader.
 `;
 
 const FOUNDER_PERSONA = `
@@ -62,7 +65,7 @@ export const FounderPrompts = {
     
     Write 3 distinct hooks for a social post based on this insight.
     CRITICAL RULES:
-    1. Keep it conversational and natural, like opening an interesting dialogue.
+    1. Drop a Bomb: Your hook must be a single, blunt, hard-hitting observation or fact. Do NOT use conversational filler (e.g. "I've been thinking about...").
     2. Do NOT use clickbait tropes or hyperbolic alarmism.
     3. Maximum length: 15 words.
     
@@ -102,6 +105,7 @@ export const FounderPrompts = {
     3. Value Check: Does it fail to provide clear utility to the reader without being overly academic?
     4. Tone Check: After the hook, did the draft lose its calm conversational tone and become too stiff or hyped?
     5. Information Loss: Did it abstract away or fail to name the specific product, company, or metrics provided in the raw facts?
+    6. Jargon Check: Did the draft use LinkedIn thought-leader buzzwords (like "executive leverage", "force multiplier", "paradigm shift") instead of plain 8th-grade English? (Fail immediately if true).
     
     Score the draft from 1-10 and list specific flaws.
     Draft:
@@ -200,6 +204,7 @@ export const InformationPrompts = {
     2. Lecturer Check: Did the draft use bolded structural headers, explicit bullet lists for analysis, or sound like an academic paper? (Fail immediately if true).
     3. Semantic Tone: After the sharp hook, does it immediately bridge into a human effortlessly telling an important story to a friend? (Fail if it loses its conversational, peer-to-peer flow).
     4. Information Loss: Did it abstract away or fail to use the exact proper nouns (like product names or company names) provided in the raw facts?
+    5. Jargon Check: Did the draft use LinkedIn thought-leader buzzwords (like "executive leverage", "force multiplier", "paradigm shift") instead of plain 8th-grade English? (Fail immediately if true).
     
     Score from 1-10 and list flaws.
     Draft:
