@@ -13,6 +13,7 @@ export async function GET() {
     // Inject the synthetic autonomous trend engine tab
     const allFeeds = [
       { id: 'TREND', name: '🔥 AUTONOMOUS TRENDS', url: '', isActive: true },
+      { id: 'PULSE', name: '⚡ RECON PULSE', url: '', isActive: true },
       ...feeds
     ];
 

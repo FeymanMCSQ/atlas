@@ -12,6 +12,8 @@ export async function GET(request: Request) {
     let whereClause = {};
     if (feedId === 'TREND') {
       whereClause = { source: { startsWith: '[Trend]' } };
+    } else if (feedId === 'PULSE') {
+      whereClause = { source: { startsWith: '[Pulse]' } };
     } else if (feedId) {
       whereClause = { source: feedId };
     }
