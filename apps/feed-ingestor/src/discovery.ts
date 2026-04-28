@@ -1,4 +1,4 @@
-import { searchGoogleNews } from "@atlas/integrations/src/serper-client.js";
+import { searchGoogleNews } from "@atlas/integrations/src/brave-client.js";
 import { db } from "@atlas/db";
 import { EventTypes, ContentIngestedPayload } from "@atlas/domain";
 import { emitEvent } from "@atlas/queue";

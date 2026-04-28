@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:backend": "npx --yes concurrently -n orchestrator,brain,ingestor,publisher,transcriber -c blue,yellow,magenta,green,cyan \"tsx apps/orchestrator/src/index.ts\" \"tsx apps/content-brain/src/index.ts\" \"tsx apps/feed-ingestor/src/index.ts\" \"tsx apps/publisher/src/worker.ts\" \"tsx apps/transcriber/src/index.ts\"",
+    "dev:backend": "npx --yes concurrently -n orchestrator,brain,ingestor,publisher,transcriber -c blue,yellow,magenta,green,cyan \"tsx --env-file=.env apps/orchestrator/src/index.ts\" \"tsx --env-file=.env apps/content-brain/src/index.ts\" \"tsx --env-file=.env apps/feed-ingestor/src/index.ts\" \"tsx --env-file=.env apps/publisher/src/worker.ts\" \"tsx --env-file=.env apps/transcriber/src/index.ts\"",
     "dev:frontend": "npm --prefix apps/frontend run dev",
     "start:backend": "npm run dev:backend",
     "clean": "rm -rf node_modules apps/*/node_modules apps/*/dist packages/*/node_modules packages/*/dist",

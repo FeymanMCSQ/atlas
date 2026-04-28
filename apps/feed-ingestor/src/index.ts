@@ -14,7 +14,7 @@ import { db } from "@atlas/db";
 import { emitEvent, closeQueue, createEventWorker } from "@atlas/queue";
 import { EventTypes, ContentIngestedPayload, AtlasEvent } from "@atlas/domain";
 
-import { discoverTrendingNews, performHyperDiscovery } from "./discovery.js";
+import { performHyperDiscovery } from "./discovery.js";
 
 
 // ---------------------------------------------------------------------------
@@ -255,10 +255,7 @@ async function processFeeds(): Promise<void> {
     }
   }
 
-  // ---- Step 3: AI Trend Discovery Engine ----
-  await discoverTrendingNews();
-
-  console.log(`\n[Feed Ingestor] Polling cycle complete.`);
+  console.log(`\n[Feed Ingestor] Polling cycle complete. (Discovery is manual-only via dashboard buttons)`);
 }
 
 import cron from 'node-cron';
@@ -282,9 +279,9 @@ async function startDaemon() {
   await runIngestionCycle();
 
 
-  // 2. Schedule standard news feed ingestion (Hourly)
-  cron.schedule('0 * * * *', async () => {
-    console.log(`[Atlas Daemon] ⏰ Triggering hourly feed ingestion...`);
+  // 2. Schedule standard news feed ingestion (Every 12 hours: 6am & 6pm)
+  cron.schedule('0 */12 * * *', async () => {
+    console.log(`[Atlas Daemon] ⏰ Triggering 12-hour feed ingestion...`);
     await runIngestionCycle();
   });
 

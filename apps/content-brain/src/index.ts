@@ -3,7 +3,7 @@ import { EventTypes, AtlasEvent, ContentDraftRequestedPayload } from "@atlas/dom
 import { db } from "@atlas/db";
 import { FounderPrompts, InformationPrompts } from "@atlas/prompts";
 // @ts-ignore
-import { searchGoogleImages } from "@atlas/integrations/src/serper-client.js";
+import { searchGoogleImages } from "@atlas/integrations/src/brave-client.js";
 // @ts-ignore
 import { generateImageWithFlux } from "@atlas/integrations/src/fal-client.js";
 

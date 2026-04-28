@@ -55,19 +55,22 @@ export default function FinanceDashboard() {
                 <a href="https://fal.ai/dashboard/billing" target="_blank" rel="noreferrer" className={styles.linkButton}>Check Fal.ai Balance ↗</a>
             </div>
 
-            {/* Serper Sector */}
+            {/* Brave Search API Sector */}
             <div className={styles.apiCard}>
                 <div className={styles.cardHeader}>
-                   <div className={styles.vendorName}>Serper.dev</div>
-                   <div className={styles.costBadgeLow}>Low Spend 📉</div>
+                   <div className={styles.vendorName}>Brave Search API</div>
+                   <div className={styles.costBadgeFree}>Effectively Free 🆓</div>
                 </div>
-                <p className={styles.vendorDesc}>Google Search API access for live data ingestion.</p>
+                <p className={styles.vendorDesc}>Independent web, news, and image search API — no Google dependency.</p>
                 <ul className={styles.dependencyList}>
                    <li>
-                     <strong>Discovery Engine:</strong> Queries Google News specifically for deep context on tech trends during the autonomous discovery cycle. Very cheap per-call.
+                     <strong>Discovery Engine:</strong> Queries Brave News and Web Search for live tech trends. Manual-only — only fires when you press the dashboard buttons.
+                   </li>
+                   <li>
+                     <strong>Free tier:</strong> $5 in free credits auto-applied monthly. A hard spending cap of $5 ensures the card is never charged.
                    </li>
                 </ul>
-                <a href="https://serper.dev/dashboard" target="_blank" rel="noreferrer" className={styles.linkButton}>Check Serper Balance ↗</a>
+                <a href="https://api-dashboard.search.brave.com/app/subscriptions" target="_blank" rel="noreferrer" className={styles.linkButton}>Check Brave Balance ↗</a>
             </div>
 
             {/* LinkedIn/X Sector */}

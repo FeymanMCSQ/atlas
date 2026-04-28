@@ -5,6 +5,7 @@
   "description": "External API adapters",
   "main": "src/index.ts",
   "exports": {
+    "./src/brave-client.js": "./src/brave-client.ts",
     "./src/serper-client.js": "./src/serper-client.ts",
     "./src/fal-client.js": "./src/fal-client.ts",
     "./src/linkedin-client.js": "./src/linkedin-client.ts",
