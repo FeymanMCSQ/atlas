@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import { z } from "zod";
 import { generateObject } from "ai";
 import { createOpenAI } from "@ai-sdk/openai";
-import { searchGoogle } from "@atlas/integrations/src/brave-client.js";
+import { searchGoogle } from "@atlas/integrations/src/serper-client.js";
 
 dotenv.config({ path: resolve(__dirname, '../../../.env') });
 
