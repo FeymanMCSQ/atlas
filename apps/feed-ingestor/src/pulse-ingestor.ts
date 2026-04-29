@@ -148,7 +148,7 @@ export async function runAtomicPulseCheck() {
  */
 export async function reconPulseTopic(topic: string) {
     console.log(`\n[Pulse Ingestor] Performing deep recon for: "${topic}"`);
-    const results = await searchGoogle(topic, 5, "qdr:w"); // Weekly filter for deep content
+    const results = await searchGoogle(topic, 5, "qdr:d"); // Daily filter for ultra-fresh content
     
     let totalIngested = 0;
     for (const r of results) {

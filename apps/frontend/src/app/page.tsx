@@ -6,8 +6,24 @@ import styles from './page.module.css';
 // Type declarations mapping our internal domain
 type Feed = { id: string; name: string; url: string; isActive: boolean; category: string };
 
-type Signal = { id: string; source: string; title: string; url: string; summary: string; imageUrl?: string };
+type Signal = { id: string; source: string; title: string; url: string; summary: string; imageUrl?: string; createdAt?: string };
 type Draft = { id: string; contentItemId: string; platform: string; body: string; status: string; mediaUrl?: string };
+
+function timeAgo(dateString?: string) {
+  if (!dateString) return '';
+  const seconds = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + "y ago";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + "mo ago";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + "d ago";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + "h ago";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + "m ago";
+  return Math.floor(seconds) + "s ago";
+}
 
 export default function AtlasDashboard() {
   const [feeds, setFeeds] = useState<Feed[]>([]);
@@ -347,7 +363,10 @@ export default function AtlasDashboard() {
               )}
               <div className={styles.cardHeader}>
                 <h3 className={styles.cardTitle}>{signal.title}</h3>
-                <span className={styles.cardSource}>{feedName}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className={styles.cardSource}>{feedName}</span>
+                  {signal.createdAt && <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{timeAgo(signal.createdAt)}</span>}
+                </div>
               </div>
               <p className={styles.cardSummary}>{signal.summary}</p>
               
